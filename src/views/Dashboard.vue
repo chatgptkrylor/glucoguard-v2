@@ -1,717 +1,410 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref } from 'vue'
 import { Line, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
-  CategoryScale, LinearScale, PointElement, LineElement,
-  ArcElement, Title, Tooltip, Legend, Filler
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend,
+  Filler,
+  ArcElement,
 } from 'chart.js'
+import type { ChartData, ChartOptions } from 'chart.js'
 import {
-  Activity, TrendingUp, CheckCircle, Info, AlertTriangle,
-  Zap, Shield, Star, Flame, Plus, ArrowUp, ArrowDown,
-  Minus, Award, BookOpen, HelpCircle, ChevronRight,
-  Target, Clock, Utensils
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Activity,
+  Target,
+  Zap,
+  Info,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
 } from 'lucide-vue-next'
-import { analyzeGlucoseData } from '../ai/glucoseAnalysis'
+import { mockGlucoseData, mockHealthStats } from '../data/mockData'
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement,
-  ArcElement, Title, Tooltip, Legend, Filler
+  Tooltip, Legend, Filler, ArcElement
 )
 
-const isLoading = ref(true)
-const selectedPeriod = ref<'24h' | '7d' | '30d'>('24h')
-const showQuickLog = ref(false)
-const loggedGlucose = ref('')
-const recentlyLogged = ref(false)
-const showTooltip = ref<string | null>(null)
-const loggedFood = ref<string | null>(null)
-const showCelebration = ref(false)
+const stats = mockHealthStats
+const currentGlucose = mockGlucoseData[mockGlucoseData.length - 1].value
+const prevGlucose = mockGlucoseData[mockGlucoseData.length - 2].value
+const glucoseDiff = currentGlucose - prevGlucose
 
-const streakDays = ref(7)
-const personalBest = ref(14)
+const trend = glucoseDiff > 5 ? 'rising' : glucoseDiff < -5 ? 'falling' : 'stable'
+const trendLabel = trend === 'rising' ? 'Rising' : trend === 'falling' ? 'Falling' : 'Stable'
 
-const currentGlucose = ref(142)
-const previousGlucose = ref(155)
-
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false
-    setTimeout(() => {
-      showCelebration.value = true
-      setTimeout(() => showCelebration.value = false, 4000)
-    }, 500)
-  }, 1400)
-})
-
-const readings = ref([
-  { value: 120, time: '8 AM' },
-  { value: 145, time: '10 AM' },
-  { value: 130, time: '12 PM' },
-  { value: 160, time: '2 PM' },
-  { value: 125, time: '4 PM' },
-  { value: 150, time: '7 PM' },
-  { value: 135, time: '9 PM' },
-])
-
-const stats = computed(() =>
-  analyzeGlucoseData(readings.value.map(r => ({
-    value: r.value,
-    timestamp: new Date(),
-    mealContext: 'fasting' as const
-  })))
-)
-
-const glucoseTrend = computed(() => {
-  const diff = currentGlucose.value - previousGlucose.value
-  if (diff > 5) return 'rising'
-  if (diff < -5) return 'falling'
-  return 'stable'
-})
-
-const glucoseDiff = computed(() => currentGlucose.value - previousGlucose.value)
-
-const logGlucose = () => {
-  if (loggedGlucose.value) {
-    recentlyLogged.value = true
-    showQuickLog.value = false
-    loggedGlucose.value = ''
-    setTimeout(() => recentlyLogged.value = false, 3000)
-  }
+function glucoseStatus(val: number): { label: string; colorClass: string } {
+  if (val < 70) return { label: 'Low', colorClass: 'text-red-300' }
+  if (val <= 140) return { label: 'In Range', colorClass: 'text-teal-200' }
+  if (val <= 180) return { label: 'Slightly High', colorClass: 'text-amber-200' }
+  return { label: 'High', colorClass: 'text-red-300' }
 }
 
-const indianFoods = [
-  { name: 'Roti',   emoji: '🫓', carbs: 15 },
-  { name: 'Rice',   emoji: '🍚', carbs: 28 },
-  { name: 'Dal',    emoji: '🫘', carbs: 20 },
-  { name: 'Sabzi',  emoji: '🥗', carbs: 8  },
-  { name: 'Fruit',  emoji: '🍎', carbs: 15 },
-]
+const status = glucoseStatus(currentGlucose)
 
-const logFood = (name: string) => {
-  loggedFood.value = name
-  setTimeout(() => loggedFood.value = null, 2000)
+// Glucose line chart
+const lineChartData: ChartData<'line'> = {
+  labels: mockGlucoseData.map(d => d.time),
+  datasets: [
+    {
+      label: 'Glucose',
+      data: mockGlucoseData.map(d => d.value),
+      borderColor: '#14b8a6',
+      backgroundColor: 'rgba(20,184,166,0.08)',
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      pointBackgroundColor: '#14b8a6',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1.5,
+      tension: 0.4,
+      fill: true,
+    },
+    {
+      label: 'Target Max',
+      data: mockGlucoseData.map(() => 180),
+      borderColor: 'rgba(245,158,11,0.4)',
+      borderWidth: 1.5,
+      borderDash: [4, 4],
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+    },
+    {
+      label: 'Target Min',
+      data: mockGlucoseData.map(() => 70),
+      borderColor: 'rgba(239,68,68,0.4)',
+      borderWidth: 1.5,
+      borderDash: [4, 4],
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+    },
+  ],
 }
 
-const tooltips: Record<string, string> = {
-  hba1c: 'HbA1c measures average blood sugar over 2–3 months. Below 7% is the general target for most people with diabetes.',
-  tir: 'Time in Range (TIR) is the % of time your glucose stays between 70–180 mg/dL. A target of 70%+ is recommended by international guidelines.',
-  dawn: 'Dawn Phenomenon is a natural morning rise in blood sugar caused by hormones released during sleep (cortisol, growth hormone).',
-  hypoglycemia: 'Hypoglycemia (low blood sugar, <70 mg/dL) causes shakiness, sweating, and confusion. Keep fast-acting carbs nearby.',
-}
-
-const toggleTooltip = (key: string) => {
-  showTooltip.value = showTooltip.value === key ? null : key
-}
-
-/* ── Chart configs ── */
-const lineChartOptions = {
+const lineChartOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
-  interaction: { intersect: false, mode: 'index' as const },
+  interaction: { mode: 'index', intersect: false },
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(28,25,23,0.92)',
-      titleColor: '#fafaf9',
-      bodyColor: '#d6d3d1',
-      borderColor: 'rgba(20,184,166,0.4)',
-      borderWidth: 1,
-      padding: 14,
-      cornerRadius: 10,
-      titleFont: { size: 13, weight: '600' as const },
-      bodyFont: { size: 12 },
-      displayColors: false,
-      callbacks: { label: (ctx: any) => ` ${ctx.parsed.y} mg/dL` }
-    }
+      backgroundColor: '#1c1917',
+      titleColor: '#e7e5e4',
+      bodyColor: '#a8a29e',
+      padding: 10,
+      cornerRadius: 8,
+    },
   },
   scales: {
     y: {
-      min: 50, max: 210,
-      grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
-      ticks: { color: '#a8a29e', font: { size: 11 }, padding: 8 }
+      min: 50,
+      max: 260,
+      grid: { color: 'rgba(0,0,0,0.04)' },
+      ticks: { font: { size: 11 }, color: '#a8a29e', stepSize: 50 },
+      border: { display: false },
     },
     x: {
       grid: { display: false },
-      ticks: { color: '#a8a29e', font: { size: 11 }, padding: 8 }
-    }
-  }
+      ticks: { font: { size: 10 }, color: '#a8a29e', maxRotation: 0, maxTicksLimit: 8 },
+      border: { display: false },
+    },
+  },
 }
 
-const lineChartData = computed(() => ({
-  labels: readings.value.map(r => r.time),
-  datasets: [{
-    data: readings.value.map(r => r.value),
-    borderColor: '#14b8a6',
-    backgroundColor: (ctx: any) => {
-      const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280)
-      gradient.addColorStop(0, 'rgba(20,184,166,0.18)')
-      gradient.addColorStop(1, 'rgba(20,184,166,0.00)')
-      return gradient
-    },
-    fill: true,
-    tension: 0.45,
-    pointRadius: 5,
-    pointHoverRadius: 7,
-    pointBackgroundColor: '#14b8a6',
-    pointBorderColor: '#ffffff',
-    pointBorderWidth: 2,
-    borderWidth: 2.5,
-  }]
-}))
+// TIR Doughnut
+const lowPct = 5
+const highPct = 100 - stats.timeInRange - lowPct
 
-const doughnutOptions = {
+const tirChartData: ChartData<'doughnut'> = {
+  labels: ['In Range', 'High', 'Low'],
+  datasets: [
+    {
+      data: [stats.timeInRange, highPct, lowPct],
+      backgroundColor: ['#14b8a6', '#f59e0b', '#ef4444'],
+      borderWidth: 0,
+      hoverOffset: 4,
+    },
+  ],
+}
+
+const tirChartOptions: ChartOptions<'doughnut'> = {
   responsive: true,
   maintainAspectRatio: false,
-  cutout: '76%',
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: 'rgba(28,25,23,0.92)',
-      bodyColor: '#fafaf9',
-      borderColor: 'rgba(0,0,0,0.1)',
-      borderWidth: 1,
-      padding: 12,
-      cornerRadius: 10,
-    }
-  }
+  plugins: { legend: { display: false } },
+  cutout: '72%',
 }
 
-const doughnutData = computed(() => ({
-  labels: ['In Range', 'Above', 'Below'],
-  datasets: [{
-    data: [75, 15, 10],
-    backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
-    borderWidth: 0,
-    hoverOffset: 6
-  }]
-}))
+const period = ref<'day' | 'week' | 'month'>('day')
+
+const insights = [
+  { type: 'warning', icon: '🌅', title: 'Dawn Phenomenon', text: 'Morning glucose consistently spikes 4–8 AM. Consider discussing bedtime insulin timing with Dr. Rais.' },
+  { type: 'success', icon: '✅', title: 'Improving Trend', text: 'Post-meal glucose 15% better this week vs last. Low-GI food choices are working.' },
+  { type: 'info', icon: '💊', title: 'Medication Reminder', text: 'Take Metformin 500mg with dinner. Consistent timing improves effectiveness.' },
+  { type: 'info', icon: '🚶', title: 'Activity Suggestion', text: 'A 15-min evening walk can lower your glucose by ~20 mg/dL. Best time: 30 min after dinner.' },
+]
+
+const recentReadings = [
+  { time: '10:00 PM', value: 130, context: 'After Dinner' },
+  { time: '8:00 PM', value: 155, context: 'After Snack' },
+  { time: '6:00 PM', value: 175, context: 'After Lunch' },
+  { time: '2:00 PM', value: 165, context: 'Post Meal' },
+  { time: '10:30 AM', value: 145, context: 'After Breakfast' },
+]
 </script>
 
 <template>
-  <div class="space-y-5">
+  <div class="px-4 py-5 max-w-4xl mx-auto space-y-4 lg:px-6 lg:py-6">
 
-    <!-- Loading state -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-24">
-      <div class="w-14 h-14 rounded-full border-2 border-teal-200 border-t-teal-500 animate-spin mb-5" />
-      <p class="text-stone-600 font-medium">Analyzing your health data…</p>
-      <p class="text-stone-400 text-sm mt-1">Just a moment</p>
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Good evening, Rajesh</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Thursday, March 20, 2026</p>
+      </div>
+      <div class="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm flex-shrink-0">
+        <button
+          v-for="p in ['day', 'week', 'month'] as const"
+          :key="p"
+          @click="period = p"
+          class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors min-h-[32px]"
+          :class="period === p ? 'bg-teal-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+        >{{ p.charAt(0).toUpperCase() + p.slice(1) }}</button>
+      </div>
     </div>
 
-    <div v-else class="space-y-5 animate-fade-in-up">
+    <!-- Current Glucose Hero Card -->
+    <div class="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+      <div class="absolute bottom-0 left-0 w-28 h-28 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
-      <!-- ── TRUST BANNER ── -->
-      <div class="trust-banner">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <div class="trust-badge trust-badge--teal">
-            <Shield style="width:12px;height:12px" />
-            Clinically Validated
+      <div class="relative z-10 flex items-start justify-between mb-4">
+        <div>
+          <p class="text-sm text-teal-100 font-medium mb-1">Current Glucose</p>
+          <div class="flex items-end gap-2">
+            <span class="text-5xl font-extrabold tracking-tight leading-none">{{ currentGlucose }}</span>
+            <span class="text-lg text-teal-200 mb-1">mg/dL</span>
           </div>
-          <div class="trust-badge trust-badge--blue">
-            <Star style="width:12px;height:12px" />
-            98.7% Accuracy
+          <div class="flex items-center gap-2 mt-2">
+            <span class="text-xs bg-white/15 rounded-full px-2.5 py-0.5 font-medium" :class="status.colorClass">{{ status.label }}</span>
+            <component :is="trend === 'rising' ? TrendingUp : trend === 'falling' ? TrendingDown : Minus" class="w-4 h-4 text-teal-100" />
+            <span class="text-xs text-teal-100">{{ trendLabel }}</span>
           </div>
-          <div class="trust-badge trust-badge--purple">
-            <Award style="width:12px;height:12px" />
-            Dr. Nadeem Rais, Endocrinologist
-          </div>
-          <div class="ml-auto hidden sm:flex items-center gap-1.5 text-xs text-stone-400">
-            <Clock style="width:11px;height:11px" />
-            Last sync: 2 min ago
-          </div>
+        </div>
+        <div class="text-right text-teal-100">
+          <p class="text-xs">Last updated</p>
+          <p class="text-sm font-semibold text-white">10:00 PM</p>
         </div>
       </div>
 
-      <!-- ── CELEBRATION BANNER ── -->
-      <Transition name="celebrate">
-        <div v-if="showCelebration" class="celebration-banner">
-          <span class="text-2xl">🎉</span>
-          <div>
-            <div class="font-bold text-emerald-800 text-sm">Great job, Arjun!</div>
-            <div class="text-emerald-700 text-xs mt-0.5">Your glucose is in the optimal range. Keep the streak going!</div>
-          </div>
-          <button @click="showCelebration = false" class="ml-auto text-emerald-600 hover:text-emerald-800 text-lg leading-none">×</button>
+      <div class="relative z-10 grid grid-cols-3 gap-2">
+        <div class="bg-white/10 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold">{{ stats.estimatedHbA1c }}%</p>
+          <p class="text-[11px] text-teal-100 mt-0.5">Est. HbA1c</p>
         </div>
-      </Transition>
-
-      <!-- ── HERO STATS ── -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-
-        <!-- Current Glucose — hero teal card -->
-        <div class="stat-hero relative overflow-hidden col-span-1">
-          <div class="relative z-10">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-                <Activity style="width:18px;height:18px" class="text-white" />
-              </div>
-              <!-- Trend arrow pill -->
-              <div
-                class="trend-pill"
-                :class="{
-                  'trend-pill--up': glucoseTrend === 'rising',
-                  'trend-pill--down': glucoseTrend === 'falling',
-                  'trend-pill--stable': glucoseTrend === 'stable'
-                }"
-              >
-                <ArrowUp v-if="glucoseTrend === 'rising'" style="width:10px;height:10px" />
-                <ArrowDown v-else-if="glucoseTrend === 'falling'" style="width:10px;height:10px" />
-                <Minus v-else style="width:10px;height:10px" />
-                <span>{{ glucoseTrend === 'stable' ? 'Stable' : (glucoseDiff > 0 ? '+' : '') + glucoseDiff }}</span>
-              </div>
-            </div>
-            <div class="text-white/75 text-xs font-medium mb-1 uppercase tracking-wide">Current Glucose</div>
-            <div class="stat-value text-white">{{ currentGlucose }}</div>
-            <div class="text-white/70 text-sm mt-1">mg/dL · In Range ✓</div>
-            <div class="text-white/45 text-xs mt-0.5">vs 1 hour ago</div>
-          </div>
+        <div class="bg-white/10 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold">{{ stats.timeInRange }}%</p>
+          <p class="text-[11px] text-teal-100 mt-0.5">Time in Range</p>
         </div>
-
-        <!-- Time in Range -->
-        <div class="card-premium">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 rounded-xl icon-green flex items-center justify-center">
-              <CheckCircle style="width:18px;height:18px" />
-            </div>
-            <button @click="toggleTooltip('tir')" class="help-btn" :class="{ 'help-btn--active': showTooltip === 'tir' }">
-              <HelpCircle style="width:14px;height:14px" />
-            </button>
-          </div>
-          <div class="text-stone-500 text-xs font-medium uppercase tracking-wide mb-1">Time in Range</div>
-          <div class="text-3xl lg:text-4xl font-bold text-stone-800">{{ Math.round(stats.timeInRange.percentage) }}%</div>
-          <div class="text-xs text-stone-400 mt-1.5">Target: 70%+</div>
-          <div class="progress-track mt-3">
-            <div class="progress-green" :style="`width:${Math.round(stats.timeInRange.percentage)}%`" />
-          </div>
-          <Transition name="tooltip-slide">
-            <div v-if="showTooltip === 'tir'" class="tooltip-box mt-3">{{ tooltips.tir }}</div>
-          </Transition>
-        </div>
-
-        <!-- 7-Day Average -->
-        <div class="card-premium">
-          <div class="w-9 h-9 rounded-xl icon-blue flex items-center justify-center mb-3">
-            <TrendingUp style="width:18px;height:18px" />
-          </div>
-          <div class="text-stone-500 text-xs font-medium uppercase tracking-wide mb-1">7-Day Average</div>
-          <div class="text-3xl lg:text-4xl font-bold text-stone-800">{{ Math.round(stats.average) }}</div>
-          <div class="text-xs text-stone-400 mt-1.5">mg/dL</div>
-          <div class="mt-2.5">
-            <span class="badge badge-success" style="font-size:0.68rem;">↓ 5% vs last week</span>
-          </div>
-        </div>
-
-        <!-- Est. HbA1c -->
-        <div class="card-premium">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 rounded-xl icon-purple flex items-center justify-center">
-              <Info style="width:18px;height:18px" />
-            </div>
-            <button @click="toggleTooltip('hba1c')" class="help-btn" :class="{ 'help-btn--active': showTooltip === 'hba1c' }">
-              <HelpCircle style="width:14px;height:14px" />
-            </button>
-          </div>
-          <div class="text-stone-500 text-xs font-medium uppercase tracking-wide mb-1">Est. HbA1c</div>
-          <div class="text-3xl lg:text-4xl font-bold text-stone-800">{{ stats.estimatedHbA1c.toFixed(1) }}%</div>
-          <div class="mt-2">
-            <span class="badge badge-warning">
-              <AlertTriangle style="width:10px;height:10px" />
-              Above Target
-            </span>
-          </div>
-          <Transition name="tooltip-slide">
-            <div v-if="showTooltip === 'hba1c'" class="tooltip-box mt-3">{{ tooltips.hba1c }}</div>
-          </Transition>
-        </div>
-
-      </div>
-
-      <!-- ── STREAK + QUICK ACTIONS ── -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        <!-- Streak Card -->
-        <div class="streak-card">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="streak-icon">
-              <Flame style="width:20px;height:20px" />
-            </div>
-            <div>
-              <div class="font-bold text-stone-800 text-sm">Days in Range</div>
-              <div class="text-stone-400 text-xs">Keep the streak going!</div>
-            </div>
-          </div>
-          <div class="flex items-end gap-3 mb-4">
-            <div class="streak-number">{{ streakDays }}</div>
-            <div class="pb-1.5">
-              <div class="text-stone-500 text-sm font-medium">days</div>
-              <div class="text-stone-400 text-xs">Best: {{ personalBest }} days 🏆</div>
-            </div>
-          </div>
-          <!-- 14-day dot grid -->
-          <div class="flex items-center gap-1.5">
-            <div
-              v-for="i in 14" :key="i"
-              class="streak-dot"
-              :class="i <= streakDays ? 'streak-dot--active' : 'streak-dot--empty'"
-            />
-          </div>
-          <div class="text-xs text-stone-400 mt-2">Last 14 days</div>
-        </div>
-
-        <!-- Quick Log -->
-        <div class="card-premium lg:col-span-2">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="section-title text-base">Quick Log</h3>
-              <p class="section-subtitle text-xs">One-tap tracking</p>
-            </div>
-            <Transition name="fade">
-              <span v-if="recentlyLogged" class="badge badge-success">✓ Logged!</span>
-            </Transition>
-          </div>
-
-          <!-- Glucose log row -->
-          <div class="flex items-center gap-3 mb-4">
-            <Transition name="fade" mode="out-in">
-              <div v-if="!showQuickLog" key="btn">
-                <button @click="showQuickLog = true" class="btn-primary text-sm" style="min-height:44px;padding:0.625rem 1.125rem;">
-                  <Plus style="width:15px;height:15px" />
-                  Log Glucose
-                </button>
-              </div>
-              <div v-else key="input" class="flex items-center gap-2 w-full">
-                <input
-                  v-model="loggedGlucose"
-                  type="number"
-                  placeholder="mg/dL"
-                  class="input-field w-28"
-                  style="min-height:44px;font-size:1rem;"
-                  min="40" max="400"
-                  @keyup.enter="logGlucose"
-                />
-                <button @click="logGlucose" class="btn-primary text-sm" style="min-height:44px;">Save</button>
-                <button @click="showQuickLog = false" class="btn-secondary text-sm" style="min-height:44px;padding:0.625rem 0.875rem;">✕</button>
-              </div>
-            </Transition>
-          </div>
-
-          <!-- Indian food quick-log -->
-          <div>
-            <div class="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2.5 flex items-center gap-1.5">
-              <Utensils style="width:11px;height:11px" />
-              Quick Meal Log
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="food in indianFoods"
-                :key="food.name"
-                @click="logFood(food.name)"
-                class="food-pill"
-                :class="loggedFood === food.name ? 'food-pill--logged' : ''"
-              >
-                {{ food.emoji }} {{ food.name }}
-                <span v-if="loggedFood !== food.name" class="food-pill-carbs">~{{ food.carbs }}g</span>
-                <span v-else class="font-bold text-emerald-600">✓</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── CHARTS ── -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Glucose Trend -->
-        <div class="card-premium lg:col-span-2">
-          <div class="flex items-start justify-between mb-5">
-            <div>
-              <h3 class="section-title">Glucose Trend</h3>
-              <p class="section-subtitle">Your levels over the last 24 hours</p>
-            </div>
-            <div class="flex items-center bg-stone-100 rounded-xl p-1 gap-0.5">
-              <button
-                v-for="period in ['24h','7d','30d']"
-                :key="period"
-                @click="selectedPeriod = period as any"
-                :class="[
-                  'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                  selectedPeriod === period
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'text-stone-400 hover:text-stone-600'
-                ]"
-              >{{ period }}</button>
-            </div>
-          </div>
-
-          <!-- Target range label -->
-          <div class="flex items-center gap-2 mb-3">
-            <div class="target-range-badge">
-              <Target style="width:11px;height:11px" />
-              Target: 70–180 mg/dL
-            </div>
-            <span class="text-xs text-stone-400">· 75% in range today</span>
-          </div>
-
-          <div class="h-44 sm:h-56 lg:h-64">
-            <Line :data="lineChartData" :options="lineChartOptions" />
-          </div>
-
-          <div class="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-stone-100">
-            <div class="flex items-center gap-1.5">
-              <div class="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-              <span class="text-stone-500 text-xs">In Range (70–180)</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <div class="w-2.5 h-2.5 rounded-full bg-amber-400" />
-              <span class="text-stone-500 text-xs">Above Range</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <div class="w-2.5 h-2.5 rounded-full bg-red-400" />
-              <span class="text-stone-500 text-xs">Below Range</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Time in Range Donut -->
-        <div class="card-premium flex flex-col">
-          <h3 class="section-title mb-0.5">Time in Range</h3>
-          <p class="section-subtitle mb-4">Distribution today</p>
-
-          <div class="flex-1 min-h-36 sm:min-h-48 relative">
-            <Doughnut :data="doughnutData" :options="doughnutOptions" />
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div class="text-center">
-                <div class="text-3xl font-bold text-stone-800">75%</div>
-                <div class="text-stone-400 text-xs mt-0.5">in range</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Contextual insight -->
-          <div class="what-this-means mt-4">
-            <div class="what-this-means__label">
-              <BookOpen style="width:11px;height:11px" />
-              What this means
-            </div>
-            <p class="what-this-means__text">75% TIR meets the recommended target. Aim for 80%+ for optimal control.</p>
-          </div>
-
-          <div class="space-y-2.5 mt-4 pt-4 border-t border-stone-100">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                <span class="text-stone-500 text-sm">In Range</span>
-              </div>
-              <span class="text-stone-800 font-semibold text-sm">75%</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                <span class="text-stone-500 text-sm">Above</span>
-              </div>
-              <span class="text-stone-800 font-semibold text-sm">15%</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-2.5 h-2.5 rounded-full bg-red-400" />
-                <span class="text-stone-500 text-sm">Below</span>
-              </div>
-              <span class="text-stone-800 font-semibold text-sm">10%</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── AI INSIGHTS ── -->
-      <div class="card-premium">
-        <div class="flex flex-wrap items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-2xl flex items-center justify-center icon-purple">
-            <Zap style="width:20px;height:20px" />
-          </div>
-          <div>
-            <h3 class="section-title">AI Health Insights</h3>
-            <p class="section-subtitle">Personalized predictions based on your patterns</p>
-          </div>
-          <div class="ml-auto">
-            <span class="badge badge-teal" style="font-size:0.68rem;">
-              <Shield style="width:10px;height:10px" />
-              Reviewed by Dr. Rais
-            </span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-          <!-- Hypoglycemia risk — medium/amber -->
-          <div class="insight-card insight-card--amber">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-1.5">
-                <span class="text-stone-700 font-semibold text-sm">Hypoglycemia Risk</span>
-                <button @click="toggleTooltip('hypoglycemia')" class="help-btn">
-                  <HelpCircle style="width:12px;height:12px" />
-                </button>
-              </div>
-              <span class="badge badge-warning">Medium</span>
-            </div>
-            <div class="text-3xl font-bold text-amber-600 mb-2">35%</div>
-            <div class="progress-track mb-3">
-              <div class="progress-amber" style="width:35%" />
-            </div>
-            <p class="text-stone-500 text-xs leading-relaxed mb-3">Consider a small snack before bedtime to prevent overnight lows.</p>
-            <div class="what-this-means">
-              <div class="what-this-means__label">
-                <BookOpen style="width:11px;height:11px" />
-                What this means
-              </div>
-              <p class="what-this-means__text">Moderate risk. Keep 15g fast carbs (juice, glucose tabs) nearby at night.</p>
-            </div>
-            <Transition name="tooltip-slide">
-              <div v-if="showTooltip === 'hypoglycemia'" class="tooltip-box mt-3">{{ tooltips.hypoglycemia }}</div>
-            </Transition>
-          </div>
-
-          <!-- Dawn Phenomenon — high/red -->
-          <div class="insight-card insight-card--red">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-1.5">
-                <span class="text-stone-700 font-semibold text-sm">Dawn Phenomenon</span>
-                <button @click="toggleTooltip('dawn')" class="help-btn">
-                  <HelpCircle style="width:12px;height:12px" />
-                </button>
-              </div>
-              <span class="badge badge-danger">High</span>
-            </div>
-            <div class="text-3xl font-bold text-red-500 mb-2">78%</div>
-            <div class="progress-track mb-3">
-              <div class="progress-red" style="width:78%" />
-            </div>
-            <p class="text-stone-500 text-xs leading-relaxed mb-3">Expect elevated morning glucose — discuss medication timing with your doctor.</p>
-            <div class="what-this-means">
-              <div class="what-this-means__label">
-                <BookOpen style="width:11px;height:11px" />
-                What this means
-              </div>
-              <p class="what-this-means__text">High dawn effect detected. Dr. Rais may consider adjusting your basal insulin timing.</p>
-            </div>
-            <Transition name="tooltip-slide">
-              <div v-if="showTooltip === 'dawn'" class="tooltip-box mt-3">{{ tooltips.dawn }}</div>
-            </Transition>
-          </div>
-
-          <!-- Post-Meal Spike — low/green -->
-          <div class="insight-card insight-card--green">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-stone-700 font-semibold text-sm">Post-Meal Spike</span>
-              <span class="badge badge-success">Low ✓</span>
-            </div>
-            <div class="text-3xl font-bold text-emerald-600 mb-2">25%</div>
-            <div class="progress-track mb-3">
-              <div class="progress-green" style="width:25%" />
-            </div>
-            <p class="text-stone-500 text-xs leading-relaxed mb-3">Your meals are well-balanced. Keep up the great work!</p>
-            <!-- Positive reinforcement -->
-            <div class="positive-reinforcement">
-              <span class="text-base">🌟</span>
-              <span class="text-emerald-700 text-xs font-semibold">Excellent meal management!</span>
-            </div>
-          </div>
-
+        <div class="bg-white/10 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold">{{ stats.averageGlucose }}</p>
+          <p class="text-[11px] text-teal-100 mt-0.5">Avg (mg/dL)</p>
         </div>
       </div>
-
-      <!-- ── EDUCATIONAL FOOTER ── -->
-      <div class="edu-banner">
-        <div class="flex items-start gap-3">
-          <div class="edu-banner__icon">
-            <BookOpen style="width:15px;height:15px" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-semibold text-stone-700 text-sm mb-1">About These Insights</div>
-            <p class="text-stone-500 text-xs leading-relaxed">
-              GlucoGuard uses clinically validated algorithms reviewed by <strong>Dr. Nadeem Rais, Endocrinologist</strong>.
-              These insights are <strong>educational</strong> and complement — not replace — advice from your healthcare team.
-            </p>
-          </div>
-          <button class="text-teal-600 hover:text-teal-700 text-xs font-semibold flex items-center gap-1 whitespace-nowrap flex-shrink-0">
-            Learn more <ChevronRight style="width:12px;height:12px" />
-          </button>
-        </div>
-      </div>
-
     </div>
+
+    <!-- Quick stats row -->
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Activity class="w-3.5 h-3.5 text-teal-600" />
+          </div>
+          <span class="text-xs text-gray-500 font-medium">Variability</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.glucoseVariability }}%</p>
+        <p class="text-xs text-gray-400 mt-0.5">CV target &lt;36%</p>
+      </div>
+
+      <div class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Target class="w-3.5 h-3.5 text-green-600" />
+          </div>
+          <span class="text-xs text-gray-500 font-medium">Readings</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.totalReadings }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">Last 24 hrs</p>
+      </div>
+
+      <div class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <AlertTriangle class="w-3.5 h-3.5 text-red-500" />
+          </div>
+          <span class="text-xs text-gray-500 font-medium">Hypo Events</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.hypoEvents }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">This week</p>
+      </div>
+
+      <div class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Zap class="w-3.5 h-3.5 text-amber-500" />
+          </div>
+          <span class="text-xs text-gray-500 font-medium">Hyper Events</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ stats.hyperEvents }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">This week</p>
+      </div>
+    </div>
+
+    <!-- Glucose Chart -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-5">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="text-base font-semibold text-gray-900">Glucose Trend</h3>
+        <div class="flex items-center gap-3 text-xs text-gray-400">
+          <span class="flex items-center gap-1.5">
+            <span class="w-3 h-0.5 bg-teal-500 inline-block rounded" />
+            Glucose
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-3 h-0.5 bg-amber-400 inline-block rounded" />
+            Target
+          </span>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mb-3">Target range: 70–180 mg/dL</p>
+      <div class="h-48 sm:h-56">
+        <Line :data="lineChartData" :options="lineChartOptions" />
+      </div>
+    </div>
+
+    <!-- TIR + Recent Readings -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+      <!-- Time in Range -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <h3 class="text-base font-semibold text-gray-900 mb-3">Time in Range</h3>
+        <div class="relative h-36 flex items-center justify-center">
+          <Doughnut :data="tirChartData" :options="tirChartOptions" />
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <p class="text-2xl font-bold text-gray-900">{{ stats.timeInRange }}%</p>
+            <p class="text-xs text-gray-400">In Range</p>
+          </div>
+        </div>
+        <div class="space-y-2 mt-3">
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 bg-teal-500 rounded-sm flex-shrink-0" />
+              <span class="text-gray-600">In Range (70–180)</span>
+            </div>
+            <span class="font-semibold text-gray-900">{{ stats.timeInRange }}%</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 bg-amber-400 rounded-sm flex-shrink-0" />
+              <span class="text-gray-600">High (&gt;180)</span>
+            </div>
+            <span class="font-semibold text-gray-900">{{ highPct }}%</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 bg-red-400 rounded-sm flex-shrink-0" />
+              <span class="text-gray-600">Low (&lt;70)</span>
+            </div>
+            <span class="font-semibold text-gray-900">{{ lowPct }}%</span>
+          </div>
+        </div>
+        <div class="mt-3 p-2.5 rounded-lg text-xs" :class="stats.timeInRange >= 70 ? 'bg-teal-50 text-teal-700' : 'bg-amber-50 text-amber-700'">
+          <CheckCircle v-if="stats.timeInRange >= 70" class="w-3.5 h-3.5 inline mr-1" />
+          <Info v-else class="w-3.5 h-3.5 inline mr-1" />
+          {{ stats.timeInRange >= 70 ? 'Goal achieved! Target is ≥70%' : `${70 - stats.timeInRange}% below goal. Target is ≥70%` }}
+        </div>
+      </div>
+
+      <!-- Recent Readings -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-base font-semibold text-gray-900">Recent Readings</h3>
+          <Clock class="w-4 h-4 text-gray-400" />
+        </div>
+        <div class="space-y-1">
+          <div
+            v-for="r in recentReadings"
+            :key="r.time"
+            class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
+          >
+            <div>
+              <p class="text-sm font-medium text-gray-800">{{ r.context }}</p>
+              <p class="text-xs text-gray-400">{{ r.time }}</p>
+            </div>
+            <div class="text-right">
+              <p
+                class="text-sm font-bold"
+                :class="r.value < 70 ? 'text-red-600' : r.value <= 180 ? 'text-teal-600' : 'text-amber-600'"
+              >{{ r.value }} <span class="text-xs font-normal text-gray-400">mg/dL</span></p>
+              <p
+                class="text-[10px] font-medium"
+                :class="r.value < 70 ? 'text-red-500' : r.value <= 180 ? 'text-teal-500' : 'text-amber-500'"
+              >{{ r.value < 70 ? 'Low' : r.value <= 180 ? 'In Range' : 'High' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-5">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-7 h-7 bg-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Zap class="w-4 h-4 text-white" />
+        </div>
+        <h3 class="text-base font-semibold text-gray-900">AI Insights</h3>
+        <span class="ml-auto text-[10px] bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5 font-semibold">GlucoGuard AI</span>
+      </div>
+      <div class="space-y-3">
+        <div
+          v-for="insight in insights"
+          :key="insight.title"
+          class="flex gap-3 p-3 rounded-xl"
+          :class="{
+            'bg-amber-50 border border-amber-100': insight.type === 'warning',
+            'bg-green-50 border border-green-100': insight.type === 'success',
+            'bg-blue-50 border border-blue-100': insight.type === 'info',
+          }"
+        >
+          <span class="text-xl leading-none flex-shrink-0 mt-0.5">{{ insight.icon }}</span>
+          <div class="min-w-0">
+            <p
+              class="text-sm font-semibold mb-0.5"
+              :class="{
+                'text-amber-800': insight.type === 'warning',
+                'text-green-800': insight.type === 'success',
+                'text-blue-800': insight.type === 'info',
+              }"
+            >{{ insight.title }}</p>
+            <p
+              class="text-xs leading-relaxed"
+              :class="{
+                'text-amber-700': insight.type === 'warning',
+                'text-green-700': insight.type === 'success',
+                'text-blue-700': insight.type === 'info',
+              }"
+            >{{ insight.text }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
-
-<style scoped>
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.45s cubic-bezier(0.16,1,0.3,1) both;
-}
-
-/* Insight cards */
-.insight-card {
-  border-radius: 16px;
-  padding: 1.125rem;
-  border: 1px solid;
-}
-.insight-card--amber { background: #fffbeb; border-color: rgba(245,158,11,0.2); }
-.insight-card--red   { background: #fef2f2; border-color: rgba(239,68,68,0.15); }
-.insight-card--green { background: #f0fdf4; border-color: rgba(34,197,94,0.2); }
-
-/* Trend pill */
-.trend-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-.trend-pill--up     { background: rgba(239,68,68,0.25); color: #fecaca; }
-.trend-pill--down   { background: rgba(34,197,94,0.25); color: #bbf7d0; }
-.trend-pill--stable { background: rgba(255,255,255,0.25); color: rgba(255,255,255,0.9); }
-
-/* Help button */
-.help-btn {
-  color: #d6d3d1;
-  padding: 2px;
-  border-radius: 4px;
-  transition: color 0.15s;
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-.help-btn:hover, .help-btn--active { color: #14b8a6; }
-
-/* Tooltip transitions */
-.tooltip-slide-enter-active, .tooltip-slide-leave-active {
-  transition: all 0.2s ease;
-}
-.tooltip-slide-enter-from, .tooltip-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-
-/* Celebration transition */
-.celebrate-enter-active { transition: all 0.4s cubic-bezier(0.16,1,0.3,1); }
-.celebrate-leave-active { transition: all 0.3s ease; }
-.celebrate-enter-from, .celebrate-leave-to { opacity: 0; transform: translateY(-10px) scale(0.98); }
-
-/* Fade transition */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-/* Icon helpers */
-.icon-green  { background: #dcfce7; color: #15803d; }
-.icon-blue   { background: #dbeafe; color: #1d4ed8; }
-.icon-purple { background: #ede9fe; color: #7c3aed; }
-</style>

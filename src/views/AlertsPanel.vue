@@ -1,400 +1,397 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import {
-  Bell,
   AlertTriangle,
   AlertCircle,
   Info,
-  CheckCircle2,
-  Clock,
-  TrendingDown,
+  CheckCircle,
+  Bell,
   TrendingUp,
-  Activity,
-  Shield
+  Moon,
+  Sun,
+  Zap,
+  Clock,
 } from 'lucide-vue-next'
-import {
-  predictHypoglycemia,
-  predictHyperglycemia,
-  analyzeGlucosePatterns,
-  Alert,
-  Pattern
-} from '../ai/predictiveAlerts'
 
-/* Mock data */
-const mockReadings = ref([
-  { value: 140, timestamp: new Date(Date.now() - 3600000 * 8), mealContext: 'fasting' as const },
-  { value: 180, timestamp: new Date(Date.now() - 3600000 * 6), mealContext: 'after_meal' as const },
-  { value: 160, timestamp: new Date(Date.now() - 3600000 * 4), mealContext: 'before_meal' as const },
-  { value: 200, timestamp: new Date(Date.now() - 3600000 * 2), mealContext: 'after_meal' as const },
-  { value: 140, timestamp: new Date(), mealContext: 'before_meal' as const },
-])
+interface LocalAlert {
+  id: string
+  type: 'hypoglycemia' | 'hyperglycemia' | 'pattern' | 'medication' | 'lifestyle'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  title: string
+  message: string
+  time: string
+  action?: string
+  acknowledged: boolean
+}
 
-const currentGlucose    = ref(140)
-const timeSinceLastMeal = ref(4)
+interface LocalPattern {
+  id: string
+  type: string
+  title: string
+  description: string
+  confidence: number
+  occurrences: number
+  recommendation: string
+  iconName: 'sun' | 'moon' | 'trendingUp' | 'zap'
+}
 
-const hypoglycemiaRisk  = computed(() => predictHypoglycemia(mockReadings.value, currentGlucose.value, timeSinceLastMeal.value))
-const hyperglycemiaRisk = computed(() => predictHyperglycemia(mockReadings.value, currentGlucose.value))
-const patterns          = computed(() => analyzeGlucosePatterns(mockReadings.value))
-
-const alerts = ref<Alert[]>([
+const alerts = ref<LocalAlert[]>([
   {
     id: '1',
     type: 'hypoglycemia',
-    severity: 'warning',
-    title: 'Hypoglycemia Risk Detected',
-    message: 'Based on your recent readings and time since last meal, you may experience low blood sugar within the next 2 hours.',
-    timestamp: new Date(),
-    action: 'Consider having a snack with 15–20g of carbohydrates now.',
-    acknowledged: false
+    severity: 'critical',
+    title: 'Low Glucose Risk',
+    message: 'Glucose dropped to 65 mg/dL at 3:30 AM. You have had 2 nighttime lows this week.',
+    time: '3:30 AM today',
+    action: 'Have 15g fast-acting carbs (glucose tablet, juice, or candy). Recheck in 15 min.',
+    acknowledged: false,
   },
   {
     id: '2',
     type: 'pattern',
-    severity: 'info',
-    title: 'Post-Meal Spike Pattern',
-    message: 'Your glucose consistently rises 40–60 mg/dL after meals. Consider smaller portions or lower GI foods.',
-    timestamp: new Date(Date.now() - 3600000 * 2),
-    action: 'Review meal composition in Meal Planner.',
-    acknowledged: false
+    severity: 'high',
+    title: 'Dawn Phenomenon Alert',
+    message: 'Morning glucose consistently 30+ mg/dL higher than bedtime. Detected 5 days in a row.',
+    time: '7:00 AM today',
+    action: 'Discuss adjusting bedtime insulin or medication timing with Dr. Rais.',
+    acknowledged: false,
   },
   {
     id: '3',
+    type: 'hyperglycemia',
+    severity: 'medium',
+    title: 'Post-Lunch Spike',
+    message: 'Glucose reached 215 mg/dL after lunch — 35 mg/dL above your usual pattern.',
+    time: '2:30 PM yesterday',
+    action: 'Consider a 15-20 min walk after lunch. Choose lower GI foods for tomorrow.',
+    acknowledged: false,
+  },
+  {
+    id: '4',
+    type: 'medication',
+    severity: 'low',
+    title: 'Medication Reminder',
+    message: 'Metformin 500mg due with dinner. Consistent timing improves drug effectiveness by ~15%.',
+    time: '6:00 PM today',
+    action: 'Take with or immediately after dinner.',
+    acknowledged: true,
+  },
+  {
+    id: '5',
     type: 'lifestyle',
-    severity: 'info',
-    title: 'Evening Glucose Trend',
-    message: 'Your evening readings have been 15% higher than morning. This could indicate dawn phenomenon.',
-    timestamp: new Date(Date.now() - 3600000 * 24),
-    action: 'Monitor bedtime snacks and medication timing.',
-    acknowledged: true
-  }
+    severity: 'low',
+    title: 'Exercise Streak',
+    message: 'No exercise logged in 3 days. Regular walking significantly improves insulin sensitivity.',
+    time: '10:00 AM today',
+    action: 'A 15-30 min brisk walk today can reduce your glucose by 20-40 mg/dL.',
+    acknowledged: true,
+  },
 ])
 
-const unacknowledgedAlerts = computed(() => alerts.value.filter(a => !a.acknowledged))
-const acknowledgedAlerts   = computed(() => alerts.value.filter(a => a.acknowledged))
+const patterns = ref<LocalPattern[]>([
+  {
+    id: 'p1',
+    type: 'dawn_phenomenon',
+    title: 'Dawn Phenomenon',
+    description: 'Morning glucose rises 30+ mg/dL between 4–8 AM on 5 of the last 7 days.',
+    confidence: 85,
+    occurrences: 5,
+    recommendation: 'Long-acting insulin at bedtime, or discuss medication adjustment with your doctor.',
+    iconName: 'sun',
+  },
+  {
+    id: 'p2',
+    type: 'post_meal_spike',
+    title: 'Post-Meal Spikes',
+    description: '60% of readings after lunch are above 180 mg/dL — primarily high-GI foods.',
+    confidence: 72,
+    occurrences: 8,
+    recommendation: 'Eat vegetables and protein before carbs. Consider smaller portions of rice/roti.',
+    iconName: 'trendingUp',
+  },
+  {
+    id: 'p3',
+    type: 'nighttime_low',
+    title: 'Nighttime Lows',
+    description: 'Glucose falls below 80 mg/dL 2 nights per week between 2–4 AM.',
+    confidence: 68,
+    occurrences: 3,
+    recommendation: 'Small protein snack before bed (eg: 1 boiled egg or handful of nuts).',
+    iconName: 'moon',
+  },
+])
 
-function acknowledgeAlert(id: string) {
-  const a = alerts.value.find(a => a.id === id)
-  if (a) a.acknowledged = true
+const activeTab = ref<'active' | 'acknowledged' | 'patterns'>('active')
+
+const activeAlerts = computed(() => alerts.value.filter(a => !a.acknowledged))
+const acknowledgedAlerts = computed(() => alerts.value.filter(a => a.acknowledged))
+
+function acknowledge(id: string) {
+  const alert = alerts.value.find(a => a.id === id)
+  if (alert) alert.acknowledged = true
+  if (activeAlerts.value.length === 0) activeTab.value = 'acknowledged'
 }
 
-function getAlertTypeIcon(type: string) {
-  return { hypoglycemia: TrendingDown, hyperglycemia: TrendingUp, pattern: Activity }[type] ?? Bell
+function severityConfig(severity: LocalAlert['severity']) {
+  switch (severity) {
+    case 'critical':
+      return {
+        border: 'border-l-red-500',
+        bg: 'bg-red-50',
+        badge: 'bg-red-100 text-red-700',
+        icon: AlertCircle,
+        iconColor: 'text-red-500',
+        label: 'Critical',
+      }
+    case 'high':
+      return {
+        border: 'border-l-orange-500',
+        bg: 'bg-orange-50',
+        badge: 'bg-orange-100 text-orange-700',
+        icon: AlertTriangle,
+        iconColor: 'text-orange-500',
+        label: 'High',
+      }
+    case 'medium':
+      return {
+        border: 'border-l-amber-400',
+        bg: 'bg-amber-50',
+        badge: 'bg-amber-100 text-amber-700',
+        icon: AlertTriangle,
+        iconColor: 'text-amber-500',
+        label: 'Medium',
+      }
+    default:
+      return {
+        border: 'border-l-blue-400',
+        bg: 'bg-blue-50',
+        badge: 'bg-blue-100 text-blue-700',
+        icon: Info,
+        iconColor: 'text-blue-400',
+        label: 'Info',
+      }
+  }
 }
 
-function getRiskLabel(risk: string) {
-  return { high: 'High', medium: 'Medium', low: 'Low' }[risk] ?? risk
-}
-
-function getRiskBadgeClass(risk: string) {
-  return { high: 'badge-danger', medium: 'badge-warning', low: 'badge-success' }[risk] ?? 'badge-info'
-}
-
-function getRiskBarClass(risk: string) {
-  return { high: 'progress-red', medium: 'progress-amber', low: 'progress-green' }[risk] ?? 'progress-teal'
-}
-
-const patternEmoji: Record<string, string> = {
-  dawn_phenomenon: '🌅',
-  post_meal_spike: '🍽️',
-  nighttime_low:   '🌙',
-  morning_high:    '☀️',
+const patternIcons = {
+  sun: Sun,
+  moon: Moon,
+  trendingUp: TrendingUp,
+  zap: Zap,
 }
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="px-4 py-5 max-w-4xl mx-auto space-y-4 lg:px-6 lg:py-6">
 
-    <!-- ── Header ── -->
-    <div class="card-premium">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-11 h-11 rounded-2xl flex items-center justify-center" style="background:#fee2e2;color:#b91c1c;">
-          <Bell class="w-5 h-5" />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-stone-800 tracking-tight">AI Predictive Alerts</h2>
-          <p class="text-stone-400 text-sm">Real-time glucose risk analysis and pattern detection</p>
-        </div>
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 class="text-xl font-bold text-gray-900">Health Alerts</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Predictive alerts and glucose patterns</p>
       </div>
-
-      <div v-if="unacknowledgedAlerts.length > 0" class="flex items-center gap-2 mt-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-        <span class="text-red-600 font-medium text-sm">
-          {{ unacknowledgedAlerts.length }} active alert{{ unacknowledgedAlerts.length !== 1 ? 's' : '' }} requiring attention
-        </span>
-      </div>
-      <div v-else class="flex items-center gap-2 mt-2">
-        <CheckCircle2 class="w-4 h-4 text-emerald-500" />
-        <span class="text-emerald-700 font-medium text-sm">All clear — no active alerts</span>
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center">
+          <Bell class="w-4 h-4 text-red-500" />
+        </div>
+        <span class="text-sm font-bold text-red-600">{{ activeAlerts.length }} Active</span>
       </div>
     </div>
 
-    <!-- ── Risk Dashboard ── -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Risk Summary -->
+    <div class="grid grid-cols-3 gap-3">
+      <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+        <p class="text-2xl font-bold text-red-600">{{ activeAlerts.filter(a => a.severity === 'critical' || a.severity === 'high').length }}</p>
+        <p class="text-xs text-gray-500 mt-0.5">High Risk</p>
+      </div>
+      <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+        <p class="text-2xl font-bold text-amber-600">{{ activeAlerts.filter(a => a.severity === 'medium').length }}</p>
+        <p class="text-xs text-gray-500 mt-0.5">Medium</p>
+      </div>
+      <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+        <p class="text-2xl font-bold text-teal-600">{{ patterns.length }}</p>
+        <p class="text-xs text-gray-500 mt-0.5">Patterns</p>
+      </div>
+    </div>
 
-      <!-- Hypoglycemia Risk -->
-      <div class="card">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#dbeafe;color:#1d4ed8;">
-            <TrendingDown class="w-4.5 h-4.5" style="width:18px;height:18px" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-stone-800 text-sm">Hypoglycemia Risk</h3>
-            <p class="text-xs text-stone-400">Low blood sugar</p>
-          </div>
-        </div>
+    <!-- Tabs -->
+    <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+      <button
+        @click="activeTab = 'active'"
+        class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+        :class="activeTab === 'active' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'"
+      >
+        Active
+        <span v-if="activeAlerts.length > 0" class="bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+          {{ activeAlerts.length }}
+        </span>
+      </button>
+      <button
+        @click="activeTab = 'acknowledged'"
+        class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+        :class="activeTab === 'acknowledged' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'"
+      >
+        Resolved
+      </button>
+      <button
+        @click="activeTab = 'patterns'"
+        class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+        :class="activeTab === 'patterns' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'"
+      >
+        Patterns
+        <span class="bg-teal-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+          {{ patterns.length }}
+        </span>
+      </button>
+    </div>
 
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-stone-500 text-sm">Risk Level</span>
-            <span :class="['badge', getRiskBadgeClass(hypoglycemiaRisk.risk)]">
-              {{ getRiskLabel(hypoglycemiaRisk.risk) }}
-            </span>
-          </div>
+    <!-- Active Alerts -->
+    <div v-if="activeTab === 'active'" class="space-y-3">
+      <div v-if="activeAlerts.length === 0" class="bg-green-50 rounded-2xl border border-green-100 p-6 text-center">
+        <CheckCircle class="w-10 h-10 text-green-400 mx-auto mb-2" />
+        <p class="text-green-800 font-semibold">All clear!</p>
+        <p class="text-sm text-green-600 mt-1">No active alerts right now. Keep up the great work.</p>
+      </div>
 
-          <div class="progress-track">
-            <div :class="getRiskBarClass(hypoglycemiaRisk.risk)" :style="`width:${Math.round(hypoglycemiaRisk.confidence * 100)}%`" />
-          </div>
+      <div
+        v-for="alert in activeAlerts"
+        :key="alert.id"
+        class="bg-white rounded-2xl shadow-sm overflow-hidden border border-l-4"
+        :class="[severityConfig(alert.severity).border, 'border-gray-100']"
+      >
+        <div class="p-4">
+          <div class="flex items-start gap-3">
+            <div
+              class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+              :class="severityConfig(alert.severity).bg"
+            >
+              <component :is="severityConfig(alert.severity).icon" class="w-4 h-4" :class="severityConfig(alert.severity).iconColor" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-sm font-bold text-gray-900">{{ alert.title }}</h3>
+                    <span class="text-[10px] font-semibold rounded-full px-2 py-0.5" :class="severityConfig(alert.severity).badge">
+                      {{ severityConfig(alert.severity).label }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                    <Clock class="w-3 h-3" /> {{ alert.time }}
+                  </p>
+                </div>
+              </div>
+              <p class="text-sm text-gray-700 mt-2 leading-relaxed">{{ alert.message }}</p>
 
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-stone-500">Confidence</span>
-            <span class="text-stone-800 font-semibold">{{ Math.round(hypoglycemiaRisk.confidence * 100) }}%</span>
+              <div v-if="alert.action" class="mt-2.5 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                <p class="text-xs font-semibold text-gray-500 mb-0.5">Recommended Action</p>
+                <p class="text-xs text-gray-700">{{ alert.action }}</p>
+              </div>
+            </div>
           </div>
-
-          <div v-if="hypoglycemiaRisk.predictedTime" class="flex items-center gap-2 p-3 rounded-xl" style="background:#eff6ff;">
-            <Clock class="w-4 h-4 text-blue-500 flex-shrink-0" />
-            <span class="text-xs text-blue-700 font-medium">
-              Predicted in {{ Math.round((hypoglycemiaRisk.predictedTime.getTime() - Date.now()) / 60000) }} min
-            </span>
+          <div class="flex gap-2 mt-3">
+            <button
+              @click="acknowledge(alert.id)"
+              class="flex-1 bg-gray-900 hover:bg-gray-700 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+            >
+              <CheckCircle class="w-3.5 h-3.5" />
+              Mark Resolved
+            </button>
+            <button class="px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium rounded-xl transition-colors min-h-[44px]">
+              Snooze
+            </button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Hyperglycemia Risk -->
-      <div class="card">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#fee2e2;color:#b91c1c;">
-            <TrendingUp class="w-4.5 h-4.5" style="width:18px;height:18px" />
+    <!-- Acknowledged Alerts -->
+    <div v-if="activeTab === 'acknowledged'" class="space-y-3">
+      <div v-if="acknowledgedAlerts.length === 0" class="bg-white rounded-2xl border border-gray-100 p-6 text-center text-gray-400">
+        No resolved alerts yet.
+      </div>
+      <div
+        v-for="alert in acknowledgedAlerts"
+        :key="alert.id"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 opacity-60"
+      >
+        <div class="flex items-center gap-3">
+          <CheckCircle class="w-5 h-5 text-green-400 flex-shrink-0" />
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-gray-700 truncate">{{ alert.title }}</p>
+            <p class="text-xs text-gray-400">{{ alert.time }}</p>
           </div>
-          <div>
-            <h3 class="font-semibold text-stone-800 text-sm">Hyperglycemia Risk</h3>
-            <p class="text-xs text-stone-400">High blood sugar</p>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-stone-500 text-sm">Risk Level</span>
-            <span :class="['badge', getRiskBadgeClass(hyperglycemiaRisk.risk)]">
-              {{ getRiskLabel(hyperglycemiaRisk.risk) }}
-            </span>
-          </div>
-
-          <div class="progress-track">
-            <div :class="getRiskBarClass(hyperglycemiaRisk.risk)" :style="`width:${Math.round(hyperglycemiaRisk.confidence * 100)}%`" />
-          </div>
-
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-stone-500">Confidence</span>
-            <span class="text-stone-800 font-semibold">{{ Math.round(hyperglycemiaRisk.confidence * 100) }}%</span>
-          </div>
-
-          <div class="flex items-center gap-2 p-3 rounded-xl" style="background:#fef2f2;">
-            <Activity class="w-4 h-4 text-red-400 flex-shrink-0" />
-            <span class="text-xs text-red-700 font-medium">{{ hyperglycemiaRisk.trend }}</span>
-          </div>
+          <span class="text-[10px] bg-green-50 text-green-600 rounded-full px-2 py-0.5 font-medium flex-shrink-0">Resolved</span>
         </div>
       </div>
+    </div>
 
-      <!-- Detected Patterns -->
-      <div class="card">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:#ede9fe;color:#7c3aed;">
-            <Activity class="w-4.5 h-4.5" style="width:18px;height:18px" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-stone-800 text-sm">Detected Patterns</h3>
-            <p class="text-xs text-stone-400">{{ patterns.length }} pattern{{ patterns.length !== 1 ? 's' : '' }} found</p>
-          </div>
-        </div>
+    <!-- Patterns -->
+    <div v-if="activeTab === 'patterns'" class="space-y-3">
+      <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-2">
+        <Info class="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+        <p class="text-xs text-blue-700">Patterns are detected from your last 7 days of glucose data using AI analysis.</p>
+      </div>
 
-        <div class="space-y-2.5">
-          <div
-            v-for="(pattern, i) in patterns.slice(0, 3)"
-            :key="i"
-            class="p-3 rounded-xl"
-            style="background:#fafaf9;border:1px solid #e7e5e4;"
-          >
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-base">{{ patternEmoji[pattern.type] || '📊' }}</span>
-              <span class="font-semibold text-stone-700 text-xs capitalize">
-                {{ pattern.type.replace(/_/g, ' ') }}
+      <div
+        v-for="pattern in patterns"
+        :key="pattern.id"
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"
+      >
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <component :is="patternIcons[pattern.iconName]" class="w-5 h-5 text-teal-600" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="text-sm font-bold text-gray-900">{{ pattern.title }}</h3>
+              <span class="text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 flex-shrink-0">
+                {{ pattern.confidence }}% confidence
               </span>
             </div>
-            <p class="text-xs text-stone-500 leading-snug">{{ pattern.description }}</p>
-            <div class="mt-2 flex items-center justify-between">
-              <span class="text-xs font-semibold text-purple-600">{{ Math.round(pattern.confidence * 100) }}% confidence</span>
-              <span class="text-xs text-stone-400">{{ pattern.occurrence }}× detected</span>
-            </div>
-          </div>
+            <p class="text-xs text-gray-500 mt-0.5">{{ pattern.occurrences }} occurrences detected</p>
+            <p class="text-sm text-gray-700 mt-2 leading-relaxed">{{ pattern.description }}</p>
 
-          <div v-if="patterns.length === 0" class="text-center py-4">
-            <p class="text-stone-500 text-sm">No patterns detected yet</p>
-            <p class="text-xs text-stone-400 mt-1">Add more readings for analysis</p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ── Active Alerts ── -->
-    <div>
-      <div class="flex items-center gap-2 mb-4">
-        <span class="w-2 h-2 rounded-full bg-red-500" :class="unacknowledgedAlerts.length > 0 ? 'animate-pulse' : ''" />
-        <h3 class="section-title">Active Alerts ({{ unacknowledgedAlerts.length }})</h3>
-      </div>
-
-      <div class="space-y-3">
-        <div
-          v-for="alert in unacknowledgedAlerts"
-          :key="alert.id"
-          :class="['alert-card', `alert-card--${alert.severity}`]"
-        >
-          <div class="flex items-start gap-3">
-            <div :class="['alert-icon', `alert-icon--${alert.severity}`]">
-              <component :is="getAlertTypeIcon(alert.type)" class="w-4 h-4" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2">
-                <h4 class="font-semibold text-stone-800 text-sm">{{ alert.title }}</h4>
-                <span :class="['badge flex-shrink-0', alert.severity === 'warning' ? 'badge-warning' : 'badge-info']">
-                  {{ alert.severity }}
-                </span>
+            <!-- Confidence bar -->
+            <div class="mt-3">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs text-gray-500">Confidence</span>
+                <span class="text-xs font-semibold text-gray-700">{{ pattern.confidence }}%</span>
               </div>
-              <p class="text-sm text-stone-600 mt-1 leading-relaxed">{{ alert.message }}</p>
-
-              <div v-if="alert.action" class="mt-2.5 flex items-start gap-1.5">
-                <div class="w-1.5 h-1.5 rounded-full bg-teal-400 mt-1.5 flex-shrink-0" />
-                <p class="text-xs text-stone-500"><span class="font-semibold text-stone-600">Action: </span>{{ alert.action }}</p>
-              </div>
-
-              <div class="mt-3 flex items-center gap-3">
-                <button
-                  @click="acknowledgeAlert(alert.id)"
-                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                  style="background:#f0fdf4;color:#15803d;border:1px solid rgba(34,197,94,0.2);"
-                >
-                  <CheckCircle2 class="w-3.5 h-3.5" />
-                  Acknowledge
-                </button>
-                <span class="text-xs text-stone-400">{{ new Date(alert.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) }}</span>
+              <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-teal-500 rounded-full transition-all"
+                  :style="{ width: pattern.confidence + '%' }"
+                />
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Empty state -->
-        <div
-          v-if="unacknowledgedAlerts.length === 0"
-          class="flex flex-col items-center py-12 rounded-2xl border-2 border-dashed border-stone-200"
-          style="background:#fafaf9;"
-        >
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style="background:#dcfce7;">
-            <CheckCircle2 class="w-7 h-7 text-emerald-500" />
+            <div class="mt-3 p-2.5 bg-teal-50 rounded-xl border border-teal-100">
+              <p class="text-xs font-semibold text-teal-800 mb-0.5">Recommendation</p>
+              <p class="text-xs text-teal-700 leading-relaxed">{{ pattern.recommendation }}</p>
+            </div>
           </div>
-          <p class="text-stone-700 font-semibold">All caught up!</p>
-          <p class="text-stone-400 text-sm mt-1">No active alerts requiring attention</p>
         </div>
       </div>
     </div>
 
-    <!-- ── Alert History ── -->
-    <div v-if="acknowledgedAlerts.length > 0">
-      <h3 class="section-title mb-3 text-stone-400">Alert History ({{ acknowledgedAlerts.length }})</h3>
-      <div class="space-y-2">
-        <div
-          v-for="alert in acknowledgedAlerts"
-          :key="alert.id"
-          class="flex items-center justify-between px-4 py-3 rounded-xl"
-          style="background:#fafaf9;border:1px solid #e7e5e4;opacity:0.7;"
-        >
-          <div class="flex items-center gap-2.5">
-            <component :is="getAlertTypeIcon(alert.type)" class="w-4 h-4 text-stone-300" />
-            <span class="text-stone-500 text-sm">{{ alert.title }}</span>
-          </div>
-          <span class="text-xs text-stone-400">
-            {{ new Date(alert.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}
-          </span>
+    <!-- Doctor summary -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+          <Info class="w-4 h-4 text-blue-600" />
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-900">For Dr. Nadeem Rais</p>
+          <p class="text-xs text-gray-500">Demo · Tuesday March 24, 2026</p>
         </div>
       </div>
-    </div>
-
-    <!-- ── Medical Disclaimer ── -->
-    <div class="card" style="background:#fafaf9;border-color:#e7e5e4;">
-      <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style="background:#dbeafe;color:#1d4ed8;">
-          <Shield class="w-4 h-4" />
-        </div>
-        <p class="text-stone-500 text-sm leading-relaxed">
-          These predictions are based on AI analysis of your glucose patterns and should be used as guidance only.
-          <span class="font-semibold text-stone-600">Always consult your healthcare provider</span> for medical decisions.
-          In case of emergency, seek immediate medical attention.
-        </p>
+      <div class="space-y-2 text-xs text-gray-600">
+        <p>• <strong>Key concern:</strong> Dawn phenomenon with 30+ mg/dL morning spikes, 5 of last 7 days</p>
+        <p>• <strong>Positive:</strong> Post-meal glucose improving — 15% reduction this week</p>
+        <p>• <strong>Action needed:</strong> Review bedtime medication and consider CGM upgrade</p>
       </div>
     </div>
 
   </div>
 </template>
-
-<style scoped>
-/* Alert cards */
-.alert-card {
-  background: white;
-  border-radius: 16px;
-  padding: 1.125rem;
-  border-left: 4px solid;
-  border-top: 1px solid;
-  border-right: 1px solid;
-  border-bottom: 1px solid;
-  transition: box-shadow 0.2s ease;
-}
-
-.alert-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-}
-
-.alert-card--warning {
-  border-left-color: #f59e0b;
-  border-color: rgba(245,158,11,0.2);
-  border-left-color: #f59e0b;
-  background: #fffbeb;
-}
-
-.alert-card--info {
-  border-left-color: #3b82f6;
-  border-color: rgba(59,130,246,0.15);
-  border-left-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.alert-card--critical {
-  border-left-color: #ef4444;
-  border-color: rgba(239,68,68,0.15);
-  border-left-color: #ef4444;
-  background: #fef2f2;
-}
-
-/* Alert icon containers */
-.alert-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.alert-icon--warning  { background: #fef3c7; color: #b45309; }
-.alert-icon--info     { background: #dbeafe; color: #1d4ed8; }
-.alert-icon--critical { background: #fee2e2; color: #b91c1c; }
-</style>

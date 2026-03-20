@@ -1,408 +1,386 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import {
-  Search,
-  Leaf,
-  Flame,
-  Wheat,
-  Droplets,
-  Info,
-  MapPin,
-  Tag,
-  ChevronDown,
-  ChevronUp,
-  Heart,
-  Filter
-} from 'lucide-vue-next'
-import { indianFoods, FoodItem } from '../data/indianFoods'
+import { Search, ChevronDown, ChevronUp, X, Leaf } from 'lucide-vue-next'
+import { indianFoods } from '../data/indianFoods'
+import type { FoodItem } from '../data/indianFoods'
 
-const searchQuery         = ref('')
-const selectedRegion      = ref<'all'|'north'|'south'|'east'|'west'|'pan-india'>('all')
-const selectedCategory    = ref<'all'|'grain'|'pulse'|'vegetable'|'fruit'|'dairy'|'meat'|'snack'|'beverage'>('all')
-const selectedGlycemicLoad = ref<'all'|'low'|'medium'|'high'>('all')
-const expandedFood        = ref<string|null>(null)
+type RegionFilter = 'all' | FoodItem['region']
+type CategoryFilter = 'all' | FoodItem['category']
+type GIFilter = 'all' | FoodItem['glycemicLoad']
 
-const categories = [
-  { id: 'all',      label: 'All Categories' },
-  { id: 'grain',    label: 'Grains' },
-  { id: 'pulse',    label: 'Pulses' },
-  { id: 'vegetable',label: 'Vegetables' },
-  { id: 'fruit',    label: 'Fruits' },
-  { id: 'dairy',    label: 'Dairy' },
-  { id: 'meat',     label: 'Meat & Fish' },
-  { id: 'snack',    label: 'Snacks' },
-  { id: 'beverage', label: 'Beverages' },
+const searchQuery = ref('')
+const regionFilter = ref<RegionFilter>('all')
+const categoryFilter = ref<CategoryFilter>('all')
+const giFilter = ref<GIFilter>('all')
+const expandedFood = ref<string | null>(null)
+const showFilters = ref(false)
+
+const regions: { id: RegionFilter; label: string }[] = [
+  { id: 'all', label: 'All Regions' },
+  { id: 'north', label: 'North India' },
+  { id: 'south', label: 'South India' },
+  { id: 'east', label: 'East India' },
+  { id: 'west', label: 'West India' },
+  { id: 'pan-india', label: 'Pan India' },
 ]
 
-const regions = [
-  { id: 'all',      label: 'All Regions' },
-  { id: 'north',    label: 'North Indian' },
-  { id: 'south',    label: 'South Indian' },
-  { id: 'east',     label: 'East Indian' },
-  { id: 'west',     label: 'West Indian' },
-  { id: 'pan-india',label: 'Pan-Indian' },
+const categories: { id: CategoryFilter; label: string; emoji: string }[] = [
+  { id: 'all', label: 'All', emoji: '🍱' },
+  { id: 'grain', label: 'Grains', emoji: '🌾' },
+  { id: 'pulse', label: 'Pulses', emoji: '🫘' },
+  { id: 'vegetable', label: 'Veggies', emoji: '🥦' },
+  { id: 'dairy', label: 'Dairy', emoji: '🥛' },
+  { id: 'meat', label: 'Meat', emoji: '🍗' },
+  { id: 'snack', label: 'Snacks', emoji: '🥨' },
+  { id: 'beverage', label: 'Drinks', emoji: '☕' },
+  { id: 'fruit', label: 'Fruits', emoji: '🍎' },
 ]
 
-const filteredFoods = computed(() =>
-  indianFoods.filter(food => {
-    const q = searchQuery.value.toLowerCase()
-    const matchSearch   = !q || food.name.toLowerCase().includes(q) || food.hindiName.includes(searchQuery.value) || food.tags.some(t => t.toLowerCase().includes(q))
-    const matchRegion   = selectedRegion.value === 'all'          || food.region === selectedRegion.value
-    const matchCategory = selectedCategory.value === 'all'        || food.category === selectedCategory.value
-    const matchGI       = selectedGlycemicLoad.value === 'all'    || food.glycemicLoad === selectedGlycemicLoad.value
-    return matchSearch && matchRegion && matchCategory && matchGI
+const giFilters: { id: GIFilter; label: string; color: string }[] = [
+  { id: 'all', label: 'All GI', color: 'bg-gray-100 text-gray-600' },
+  { id: 'low', label: 'Low GI', color: 'bg-teal-100 text-teal-700' },
+  { id: 'medium', label: 'Medium GI', color: 'bg-amber-100 text-amber-700' },
+  { id: 'high', label: 'High GI', color: 'bg-red-100 text-red-700' },
+]
+
+const filteredFoods = computed<FoodItem[]>(() => {
+  const q = searchQuery.value.toLowerCase().trim()
+  return indianFoods.filter(food => {
+    if (regionFilter.value !== 'all' && food.region !== regionFilter.value) return false
+    if (categoryFilter.value !== 'all' && food.category !== categoryFilter.value) return false
+    if (giFilter.value !== 'all' && food.glycemicLoad !== giFilter.value) return false
+    if (q) {
+      return (
+        food.name.toLowerCase().includes(q) ||
+        food.hindiName.toLowerCase().includes(q) ||
+        food.tags.some(t => t.toLowerCase().includes(q))
+      )
+    }
+    return true
   })
-)
+})
 
-const stats = computed(() => ({
-  total:  indianFoods.length,
-  lowGI:  indianFoods.filter(f => f.glycemicLoad === 'low').length,
-  medGI:  indianFoods.filter(f => f.glycemicLoad === 'medium').length,
-  highGI: indianFoods.filter(f => f.glycemicLoad === 'high').length,
-}))
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (regionFilter.value !== 'all') count++
+  if (categoryFilter.value !== 'all') count++
+  if (giFilter.value !== 'all') count++
+  return count
+})
 
-const hasFilters = computed(() =>
-  searchQuery.value || selectedRegion.value !== 'all' ||
-  selectedCategory.value !== 'all' || selectedGlycemicLoad.value !== 'all'
-)
-
-function clearFilters() {
+function resetFilters() {
+  regionFilter.value = 'all'
+  categoryFilter.value = 'all'
+  giFilter.value = 'all'
   searchQuery.value = ''
-  selectedRegion.value = 'all'
-  selectedCategory.value = 'all'
-  selectedGlycemicLoad.value = 'all'
 }
 
 function toggleExpand(id: string) {
   expandedFood.value = expandedFood.value === id ? null : id
 }
 
-function glClass(load: string) {
-  return {
-    low:    { badge: 'badge-success', bar: 'gi-bar--green', text: 'text-emerald-700' },
-    medium: { badge: 'badge-warning', bar: 'gi-bar--amber', text: 'text-amber-700' },
-    high:   { badge: 'badge-danger',  bar: 'gi-bar--red',   text: 'text-red-700' },
-  }[load] ?? { badge: 'badge-info', bar: 'gi-bar--teal', text: 'text-teal-700' }
+function giConfig(load: FoodItem['glycemicLoad']) {
+  return load === 'low'
+    ? { badge: 'bg-teal-50 text-teal-700 border-teal-200', bar: 'bg-teal-500' }
+    : load === 'medium'
+    ? { badge: 'bg-amber-50 text-amber-700 border-amber-200', bar: 'bg-amber-400' }
+    : { badge: 'bg-red-50 text-red-700 border-red-200', bar: 'bg-red-400' }
 }
 
-function getRegionEmoji(region: string) {
-  return { north: '🇮🇳', south: '🌴', east: '🐟', west: '🏜️', 'pan-india': '🇮🇳' }[region] ?? '🇮🇳'
+function regionLabel(r: FoodItem['region']): string {
+  const map: Record<FoodItem['region'], string> = {
+    north: 'North', south: 'South', east: 'East', west: 'West', 'pan-india': 'Pan India',
+  }
+  return map[r]
 }
 
-function getHealthNote(load: string) {
-  return {
-    low:    'Excellent choice for diabetes — minimal blood sugar impact.',
-    medium: 'Consume in moderation — watch portion sizes.',
-    high:   'Limit consumption — significant blood sugar impact.',
-  }[load] ?? ''
-}
+const totalFoods = indianFoods.length
+const lowGICount = indianFoods.filter(f => f.glycemicLoad === 'low').length
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="px-4 py-5 max-w-4xl mx-auto space-y-4 lg:px-6 lg:py-6">
 
-    <!-- ── Header ── -->
-    <div class="card-premium">
-      <div class="flex items-center gap-3 mb-5">
-        <div class="w-11 h-11 rounded-2xl flex items-center justify-center" style="background:#ccfbf1;color:#0d9488;">
-          <Wheat class="w-5 h-5" />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-stone-800 tracking-tight">Indian Food Database</h2>
-          <p class="text-stone-400 text-sm">{{ stats.total }}+ foods with glycemic index & nutrition data</p>
-        </div>
+    <!-- Header -->
+    <div>
+      <h2 class="text-xl font-bold text-gray-900">Food Database</h2>
+      <p class="text-sm text-gray-500 mt-0.5">{{ totalFoods }} Indian foods with glycemic index data · {{ lowGICount }} diabetes-friendly</p>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="grid grid-cols-4 gap-2">
+      <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+        <p class="text-lg font-bold text-gray-900">{{ totalFoods }}</p>
+        <p class="text-[10px] text-gray-500">Total Foods</p>
       </div>
-
-      <!-- Stats bar -->
-      <div class="grid grid-cols-3 gap-3">
-        <div class="stat-chip stat-chip--green">
-          <div class="text-2xl font-bold">{{ stats.lowGI }}</div>
-          <div class="text-xs font-medium mt-0.5">Low GI Foods</div>
-        </div>
-        <div class="stat-chip stat-chip--amber">
-          <div class="text-2xl font-bold">{{ stats.medGI }}</div>
-          <div class="text-xs font-medium mt-0.5">Medium GI Foods</div>
-        </div>
-        <div class="stat-chip stat-chip--red">
-          <div class="text-2xl font-bold">{{ stats.highGI }}</div>
-          <div class="text-xs font-medium mt-0.5">High GI Foods</div>
-        </div>
+      <div class="bg-teal-50 rounded-xl p-3 border border-teal-100 text-center">
+        <p class="text-lg font-bold text-teal-700">{{ indianFoods.filter(f => f.glycemicLoad === 'low').length }}</p>
+        <p class="text-[10px] text-teal-600">Low GI</p>
+      </div>
+      <div class="bg-amber-50 rounded-xl p-3 border border-amber-100 text-center">
+        <p class="text-lg font-bold text-amber-700">{{ indianFoods.filter(f => f.glycemicLoad === 'medium').length }}</p>
+        <p class="text-[10px] text-amber-600">Medium GI</p>
+      </div>
+      <div class="bg-red-50 rounded-xl p-3 border border-red-100 text-center">
+        <p class="text-lg font-bold text-red-700">{{ indianFoods.filter(f => f.glycemicLoad === 'high').length }}</p>
+        <p class="text-[10px] text-red-600">High GI</p>
       </div>
     </div>
 
-    <!-- ── Search & Filters ── -->
-    <div class="card">
-      <div class="flex flex-col md:flex-row gap-3">
-        <!-- Search -->
-        <div class="flex-1 relative">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-stone-400" style="width:18px;height:18px;" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search foods in English or Hindi…"
-            class="input-field"
-            style="padding-left:2.5rem;"
-          />
+    <!-- Search -->
+    <div class="relative">
+      <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search foods (English or Hindi)..."
+        class="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition-all"
+      />
+      <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+        <X class="w-4 h-4" />
+      </button>
+    </div>
+
+    <!-- Category quick-select -->
+    <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <button
+        v-for="cat in categories"
+        :key="cat.id"
+        @click="categoryFilter = cat.id"
+        class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border flex-shrink-0 min-h-[36px]"
+        :class="categoryFilter === cat.id
+          ? 'bg-gray-900 text-white border-gray-900'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'"
+      >
+        {{ cat.emoji }} {{ cat.label }}
+      </button>
+    </div>
+
+    <!-- Filters toggle -->
+    <div>
+      <button
+        @click="showFilters = !showFilters"
+        class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <span>More Filters</span>
+        <span v-if="activeFilterCount > 0" class="bg-teal-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+          {{ activeFilterCount }}
+        </span>
+        <ChevronDown v-if="!showFilters" class="w-4 h-4" />
+        <ChevronUp v-else class="w-4 h-4" />
+      </button>
+
+      <div v-if="showFilters" class="mt-3 space-y-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <!-- Region filter -->
+        <div>
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Region</p>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              v-for="r in regions"
+              :key="r.id"
+              @click="regionFilter = r.id"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all border"
+              :class="regionFilter === r.id
+                ? 'bg-teal-500 text-white border-teal-500'
+                : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-teal-300'"
+            >{{ r.label }}</button>
+          </div>
         </div>
 
-        <!-- Region -->
-        <select v-model="selectedRegion" class="input-field md:w-44">
-          <option v-for="r in regions" :key="r.id" :value="r.id">{{ r.label }}</option>
-        </select>
+        <!-- GI Load filter -->
+        <div>
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Glycemic Load</p>
+          <div class="flex gap-2 flex-wrap">
+            <button
+              v-for="g in giFilters"
+              :key="g.id"
+              @click="giFilter = g.id"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all border"
+              :class="giFilter === g.id
+                ? `${g.color} border-current`
+                : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'"
+            >{{ g.label }}</button>
+          </div>
+        </div>
 
-        <!-- Category -->
-        <select v-model="selectedCategory" class="input-field md:w-44">
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.label }}</option>
-        </select>
-
-        <!-- GI Level -->
-        <select v-model="selectedGlycemicLoad" class="input-field md:w-40">
-          <option value="all">All GI Levels</option>
-          <option value="low">Low GI (≤10)</option>
-          <option value="medium">Medium GI</option>
-          <option value="high">High GI (≥20)</option>
-        </select>
-      </div>
-
-      <div class="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
-        <span class="text-stone-400 text-sm">
-          Showing <span class="font-semibold text-stone-700">{{ filteredFoods.length }}</span> of {{ stats.total }} foods
-        </span>
         <button
-          v-if="hasFilters"
-          @click="clearFilters"
-          class="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors"
+          v-if="activeFilterCount > 0"
+          @click="resetFilters"
+          class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
         >
-          Clear filters
+          <X class="w-3 h-3" /> Clear all filters
         </button>
       </div>
     </div>
 
-    <!-- ── Food Grid ── -->
-    <div v-if="filteredFoods.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Result count -->
+    <div class="flex items-center justify-between">
+      <p class="text-sm text-gray-500">
+        <span class="font-semibold text-gray-900">{{ filteredFoods.length }}</span> foods found
+      </p>
+      <div v-if="activeFilterCount > 0 || searchQuery" class="flex items-center gap-1.5">
+        <span class="text-xs text-gray-400">Active filters</span>
+        <button @click="resetFilters" class="text-xs text-teal-600 hover:text-teal-800 font-medium">Reset</button>
+      </div>
+    </div>
+
+    <!-- No results -->
+    <div v-if="filteredFoods.length === 0" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+      <Leaf class="w-10 h-10 text-gray-300 mx-auto mb-3" />
+      <p class="text-gray-600 font-medium">No foods match your search</p>
+      <p class="text-sm text-gray-400 mt-1">Try a different search term or clear your filters</p>
+      <button @click="resetFilters" class="mt-3 text-sm text-teal-600 hover:text-teal-800 font-medium">Clear filters</button>
+    </div>
+
+    <!-- Food list -->
+    <div v-else class="space-y-2">
       <div
         v-for="food in filteredFoods"
         :key="food.id"
-        :class="['food-card', expandedFood === food.id ? 'food-card--expanded' : '']"
+        class="bg-white rounded-2xl border shadow-sm overflow-hidden transition-all"
+        :class="expandedFood === food.id ? 'border-teal-200' : 'border-gray-100'"
       >
-        <!-- Card header -->
-        <div class="p-4">
-          <div class="flex items-start justify-between gap-2 mb-2.5">
-            <div class="min-w-0">
-              <h3 class="font-semibold text-stone-800 text-sm leading-snug">{{ food.name }}</h3>
-              <p class="text-xs text-stone-400 mt-0.5">{{ food.hindiName }}</p>
+        <!-- Food row -->
+        <button
+          class="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50/50 transition-colors"
+          @click="toggleExpand(food.id)"
+        >
+          <!-- GI indicator dot -->
+          <div
+            class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+            :class="giConfig(food.glycemicLoad).badge"
+          >
+            {{ food.category === 'grain' ? '🌾'
+              : food.category === 'pulse' ? '🫘'
+              : food.category === 'vegetable' ? '🥦'
+              : food.category === 'dairy' ? '🥛'
+              : food.category === 'meat' ? '🍗'
+              : food.category === 'snack' ? '🥨'
+              : food.category === 'beverage' ? '☕'
+              : food.category === 'fruit' ? '🍎'
+              : '🍱' }}
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-gray-900 truncate">{{ food.name }}</p>
+                <p class="text-xs text-gray-400">{{ food.hindiName }} · {{ food.servingSize }}</p>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-[10px] font-semibold border rounded-full px-2 py-0.5" :class="giConfig(food.glycemicLoad).badge">
+                  {{ food.glycemicLoad.toUpperCase() }} GI
+                </span>
+                <ChevronDown v-if="expandedFood !== food.id" class="w-4 h-4 text-gray-400" />
+                <ChevronUp v-else class="w-4 h-4 text-teal-500" />
+              </div>
             </div>
-            <span :class="['badge flex-shrink-0', glClass(food.glycemicLoad).badge]">
-              {{ food.glycemicLoad }} GI
+
+            <!-- Mini nutrition row -->
+            <div class="flex gap-3 mt-1.5">
+              <span class="text-xs text-gray-500"><span class="font-semibold text-gray-700">{{ food.carbs }}g</span> carbs</span>
+              <span class="text-xs text-gray-500"><span class="font-semibold text-gray-700">{{ food.protein }}g</span> protein</span>
+              <span class="text-xs text-gray-500"><span class="font-semibold text-gray-700">{{ food.calories }}</span> kcal</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Expanded detail -->
+        <div v-if="expandedFood === food.id" class="border-t border-gray-100 p-4 bg-gray-50/50 space-y-3">
+
+          <!-- Full nutrition grid -->
+          <div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            <div class="bg-white rounded-xl p-2.5 text-center border border-gray-100">
+              <p class="text-sm font-bold text-gray-900">{{ food.carbs }}g</p>
+              <p class="text-[10px] text-gray-400">Carbs</p>
+            </div>
+            <div class="bg-white rounded-xl p-2.5 text-center border border-gray-100">
+              <p class="text-sm font-bold text-gray-900">{{ food.protein }}g</p>
+              <p class="text-[10px] text-gray-400">Protein</p>
+            </div>
+            <div class="bg-white rounded-xl p-2.5 text-center border border-gray-100">
+              <p class="text-sm font-bold text-gray-900">{{ food.fat }}g</p>
+              <p class="text-[10px] text-gray-400">Fat</p>
+            </div>
+            <div class="bg-white rounded-xl p-2.5 text-center border border-gray-100">
+              <p class="text-sm font-bold text-gray-900">{{ food.fiber }}g</p>
+              <p class="text-[10px] text-gray-400">Fiber</p>
+            </div>
+            <div class="bg-white rounded-xl p-2.5 text-center border border-gray-100">
+              <p class="text-sm font-bold text-gray-900">{{ food.calories }}</p>
+              <p class="text-[10px] text-gray-400">kcal</p>
+            </div>
+            <div class="bg-white rounded-xl p-2.5 text-center border border-gray-100">
+              <p class="text-sm font-bold text-gray-900">{{ food.glycemicIndex }}</p>
+              <p class="text-[10px] text-gray-400">GI Score</p>
+            </div>
+          </div>
+
+          <!-- GI bar -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs text-gray-500">Glycemic Index</span>
+              <span class="text-xs font-semibold" :class="giConfig(food.glycemicLoad).badge.split(' ')[1]">
+                {{ food.glycemicIndex }} ({{ food.glycemicLoad }})
+              </span>
+            </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                :class="giConfig(food.glycemicLoad).bar"
+                :style="{ width: Math.min(food.glycemicIndex, 100) + '%' }"
+              />
+            </div>
+            <div class="flex justify-between text-[10px] text-gray-400 mt-0.5">
+              <span>Low (&lt;55)</span>
+              <span>Medium (55–70)</span>
+              <span>High (&gt;70)</span>
+            </div>
+          </div>
+
+          <!-- Tags + Region -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-[10px] bg-gray-100 text-gray-600 rounded-full px-2 py-1 font-medium">
+              📍 {{ regionLabel(food.region) }}
+            </span>
+            <span
+              v-for="tag in food.tags.slice(0, 4)"
+              :key="tag"
+              class="text-[10px] bg-teal-50 text-teal-700 rounded-full px-2 py-1 font-medium"
+            >{{ tag }}</span>
+          </div>
+
+          <!-- Diabetes suitability -->
+          <div
+            class="p-2.5 rounded-xl text-xs flex items-start gap-2"
+            :class="food.glycemicLoad === 'low' ? 'bg-teal-50 text-teal-700 border border-teal-100'
+              : food.glycemicLoad === 'medium' ? 'bg-amber-50 text-amber-700 border border-amber-100'
+              : 'bg-red-50 text-red-700 border border-red-100'"
+          >
+            <span class="text-base leading-none flex-shrink-0">
+              {{ food.glycemicLoad === 'low' ? '✅' : food.glycemicLoad === 'medium' ? '⚠️' : '🚫' }}
+            </span>
+            <span>
+              {{ food.glycemicLoad === 'low'
+                ? 'Diabetes-friendly. Safe to include in meals — minimal glucose impact.'
+                : food.glycemicLoad === 'medium'
+                ? 'Moderate glycemic impact. Eat with protein/fiber to slow absorption.'
+                : 'High glycemic load. Limit portions and pair with low-GI foods.' }}
             </span>
           </div>
-
-          <!-- Region + category -->
-          <div class="flex items-center gap-1.5 mb-3">
-            <span class="text-sm">{{ getRegionEmoji(food.region) }}</span>
-            <span class="text-xs text-stone-500 capitalize">{{ food.region.replace('-', ' ') }}</span>
-            <span class="text-stone-300 mx-0.5">·</span>
-            <Tag class="w-3 h-3 text-stone-400" />
-            <span class="text-xs text-stone-500 capitalize">{{ food.category }}</span>
-          </div>
-
-          <!-- Nutrition strip -->
-          <div class="grid grid-cols-4 gap-1 py-2.5 border-t border-b border-stone-100">
-            <div class="text-center">
-              <Flame class="w-3.5 h-3.5 text-orange-400 mx-auto mb-0.5" />
-              <div class="text-xs font-semibold text-stone-700">{{ food.calories }}</div>
-              <div class="text-stone-400" style="font-size:0.6rem;">kcal</div>
-            </div>
-            <div class="text-center">
-              <Wheat class="w-3.5 h-3.5 text-amber-500 mx-auto mb-0.5" />
-              <div class="text-xs font-semibold text-stone-700">{{ food.carbs }}g</div>
-              <div class="text-stone-400" style="font-size:0.6rem;">carbs</div>
-            </div>
-            <div class="text-center">
-              <Leaf class="w-3.5 h-3.5 text-emerald-500 mx-auto mb-0.5" />
-              <div class="text-xs font-semibold text-stone-700">{{ food.protein }}g</div>
-              <div class="text-stone-400" style="font-size:0.6rem;">protein</div>
-            </div>
-            <div class="text-center">
-              <Droplets class="w-3.5 h-3.5 text-blue-400 mx-auto mb-0.5" />
-              <div class="text-xs font-semibold text-stone-700">{{ food.fat }}g</div>
-              <div class="text-stone-400" style="font-size:0.6rem;">fat</div>
-            </div>
-          </div>
-
-          <!-- Expand toggle -->
-          <div class="flex items-center justify-between pt-2.5">
-            <span class="text-xs text-stone-400">{{ food.servingSize }}</span>
-            <button
-              @click="toggleExpand(food.id)"
-              class="flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
-            >
-              {{ expandedFood === food.id ? 'Less' : 'More' }} info
-              <component :is="expandedFood === food.id ? ChevronUp : ChevronDown" class="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Expanded details -->
-        <Transition name="expand">
-          <div v-if="expandedFood === food.id" class="expand-panel">
-            <!-- GI Bar -->
-            <div class="mb-3">
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-semibold text-stone-500 uppercase tracking-wide">Glycemic Index</span>
-                <span class="text-xs font-bold" :class="glClass(food.glycemicLoad).text">{{ food.glycemicIndex }}</span>
-              </div>
-              <div class="progress-track">
-                <div
-                  :class="['gi-bar', glClass(food.glycemicLoad).bar]"
-                  :style="`width:${Math.min((food.glycemicIndex / 100) * 100, 100)}%`"
-                />
-              </div>
-              <div class="flex justify-between text-xs text-stone-300 mt-0.5">
-                <span>Low</span><span>High</span>
-              </div>
-            </div>
-
-            <!-- Fiber -->
-            <div class="mb-3">
-              <span class="text-xs font-semibold text-stone-500 uppercase tracking-wide">Dietary Fiber</span>
-              <p class="text-sm text-stone-700 font-medium mt-0.5">{{ food.fiber }}g per serving</p>
-            </div>
-
-            <!-- Tags -->
-            <div class="mb-3">
-              <span class="text-xs font-semibold text-stone-500 uppercase tracking-wide">Tags</span>
-              <div class="flex flex-wrap gap-1.5 mt-1.5">
-                <span
-                  v-for="tag in food.tags"
-                  :key="tag"
-                  class="text-xs px-2 py-0.5 rounded-full font-medium"
-                  style="background:#f5f5f4;color:#78716c;border:1px solid #e7e5e4;"
-                >
-                  {{ tag.replace(/-/g, ' ') }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Health note -->
-            <div
-              :class="['flex items-start gap-2 p-2.5 rounded-xl text-xs leading-relaxed', glClass(food.glycemicLoad).badge === 'badge-success' ? 'bg-emerald-50 text-emerald-800' : glClass(food.glycemicLoad).badge === 'badge-warning' ? 'bg-amber-50 text-amber-800' : 'bg-red-50 text-red-800']"
-            >
-              <Info class="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-              {{ getHealthNote(food.glycemicLoad) }}
-            </div>
-          </div>
-        </Transition>
-      </div>
-    </div>
-
-    <!-- Empty state -->
-    <div
-      v-if="filteredFoods.length === 0"
-      class="flex flex-col items-center py-16 rounded-2xl border-2 border-dashed border-stone-200"
-      style="background:#fafaf9;"
-    >
-      <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:#f5f5f4;">
-        <Search class="w-7 h-7 text-stone-300" />
-      </div>
-      <p class="text-stone-700 font-semibold">No foods found</p>
-      <p class="text-stone-400 text-sm mt-1">Try adjusting your search or filters</p>
-      <button @click="clearFilters" class="btn-secondary mt-4">Clear all filters</button>
-    </div>
-
-    <!-- ── Educational footer ── -->
-    <div class="card" style="background:#fafaf9;border-color:#e7e5e4;">
-      <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style="background:#dbeafe;color:#1d4ed8;">
-          <Info class="w-4 h-4" />
-        </div>
-        <div>
-          <p class="text-sm font-semibold text-stone-700 mb-2">Understanding Glycemic Index (GI)</p>
-          <p class="text-xs text-stone-500 mb-2 leading-relaxed">GI measures how quickly food raises blood sugar. Lower values mean slower, steadier glucose rise — better for diabetes management.</p>
-          <div class="flex flex-wrap gap-3">
-            <div class="flex items-center gap-1.5">
-              <div class="w-2 h-2 rounded-full bg-emerald-400" />
-              <span class="text-xs text-stone-500"><span class="font-semibold text-emerald-700">Low GI (≤10)</span> — Minimal impact</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <div class="w-2 h-2 rounded-full bg-amber-400" />
-              <span class="text-xs text-stone-500"><span class="font-semibold text-amber-700">Medium GI (11–19)</span> — Moderate, watch portions</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <div class="w-2 h-2 rounded-full bg-red-400" />
-              <span class="text-xs text-stone-500"><span class="font-semibold text-red-700">High GI (≥20)</span> — Significant, consume sparingly</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
+
+    <!-- Footer note -->
+    <p class="text-xs text-gray-400 text-center pb-2">
+      GI data based on standard serving sizes. Individual responses may vary. Consult Dr. Rais for personalized guidance.
+    </p>
 
   </div>
 </template>
 
 <style scoped>
-/* Stat chips in header */
-.stat-chip {
-  border-radius: 14px;
-  padding: 0.875rem 1rem;
-  text-align: center;
-  border: 1px solid;
-}
-
-.stat-chip--green { background: #f0fdf4; border-color: rgba(34,197,94,0.2); color: #15803d; }
-.stat-chip--amber { background: #fffbeb; border-color: rgba(245,158,11,0.2); color: #b45309; }
-.stat-chip--red   { background: #fef2f2; border-color: rgba(239,68,68,0.15); color: #b91c1c; }
-
-/* Food cards */
-.food-card {
-  background: white;
-  border: 1.5px solid #e7e5e4;
-  border-radius: 18px;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.food-card:hover {
-  border-color: #14b8a6;
-  box-shadow: 0 4px 16px rgba(20,184,166,0.1);
-}
-
-.food-card--expanded {
-  border-color: #14b8a6;
-  box-shadow: 0 4px 20px rgba(20,184,166,0.12);
-}
-
-/* Expand panel */
-.expand-panel {
-  padding: 0 1rem 1rem;
-  border-top: 1px solid #f5f5f4;
-  margin-top: 0;
-  padding-top: 1rem;
-  background: #fafaf9;
-}
-
-/* GI bar variants */
-.gi-bar {
-  height: 8px;
-  border-radius: 999px;
-  transition: width 0.6s ease;
-}
-
-.gi-bar--green { background: linear-gradient(90deg, #22c55e, #16a34a); }
-.gi-bar--amber { background: linear-gradient(90deg, #f59e0b, #d97706); }
-.gi-bar--red   { background: linear-gradient(90deg, #ef4444, #dc2626); }
-.gi-bar--teal  { background: linear-gradient(90deg, #14b8a6, #0d9488); }
-
-/* Expand transition */
-.expand-enter-active, .expand-leave-active {
-  transition: all 0.25s ease;
-  overflow: hidden;
-}
-.expand-enter-from, .expand-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-.expand-enter-to, .expand-leave-from {
-  max-height: 400px;
-}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 </style>

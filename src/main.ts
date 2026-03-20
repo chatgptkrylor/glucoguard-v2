@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import './design-system.css';
+import './light-theme.css';
 
 createApp(App).mount('#app');

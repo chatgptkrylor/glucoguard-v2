@@ -12,17 +12,12 @@
  * ╚══════════════════════════════════════════════════════════════════════════╝
  */
 
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* ════════════════════════════════════════════════════════════════════════
-     WARM PREMIUM COLOR PALETTE
-     Not cold blue-grey — warm, inviting, human
-     ════════════════════════════════════════════════════════════════════════ */
+  /* WARM PREMIUM COLOR PALETTE - Not cold blue-grey */
   
-  /* Primary — Ocean Teal (calming, medical trust) */
+  /* Primary - Ocean Teal (calming, medical trust) */
   --primary-50: #f0fdfa;
   --primary-100: #ccfbf1;
   --primary-200: #99f6e4;
@@ -33,7 +28,7 @@
   --primary-700: #0f766e;
   --primary-800: #115e59;
   
-  /* Accent — Sunset Coral (warmth, energy, care) */
+  /* Accent - Sunset Coral (warmth, energy, care) */
   --coral-50: #fff1f2;
   --coral-100: #ffe4e6;
   --coral-200: #fecdd3;
@@ -43,7 +38,7 @@
   --coral-600: #e11d48;
   --coral-700: #be123c;
   
-  /* Accent — Golden Amber (optimism, warmth) */
+  /* Accent - Golden Amber (optimism, warmth) */
   --amber-50: #fffbeb;
   --amber-100: #fef3c7;
   --amber-200: #fde68a;
@@ -52,7 +47,7 @@
   --amber-500: #f59e0b;
   --amber-600: #d97706;
   
-  /* Success — Mint Green (health, growth) */
+  /* Success - Mint Green (health, growth) */
   --mint-50: #ecfdf5;
   --mint-100: #d1fae5;
   --mint-200: #a7f3d0;
@@ -61,7 +56,7 @@
   --mint-500: #10b981;
   --mint-600: #059669;
   
-  /* Purple — Wisdom, premium */
+  /* Purple - Wisdom, premium */
   --purple-50: #faf5ff;
   --purple-100: #f3e8ff;
   --purple-200: #e9d5ff;
@@ -70,11 +65,7 @@
   --purple-500: #a855f7;
   --purple-600: #9333ea;
   
-  /* ════════════════════════════════════════════════════════════════════════
-     BACKGROUND PALETTE — Deep, Warm, Sophisticated
-     ════════════════════════════════════════════════════════════════════════ */
-  
-  /* Deep warm void — not cold black */
+  /* BACKGROUND PALETTE - Deep, Warm, Sophisticated */
   --bg-void: #0c0a09;
   --bg-deep: #1c1917;
   --bg-surface: #292524;
@@ -95,40 +86,30 @@
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-hover: rgba(255, 255, 255, 0.15);
   
-  /* ════════════════════════════════════════════════════════════════════════
-     TEXT COLORS — Warm, readable, elegant
-     ════════════════════════════════════════════════════════════════════════ */
+  /* TEXT COLORS - Warm, readable, elegant */
   --text-primary: #fafaf9;
   --text-secondary: #e7e5e4;
   --text-tertiary: #a8a29e;
   --text-muted: #78716c;
   --text-subtle: #57534e;
   
-  /* ════════════════════════════════════════════════════════════════════════
-     SPACING SYSTEM — Generous, breathable
-     ════════════════════════════════════════════════════════════════════════ */
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
-  --space-20: 5rem;     /* 80px */
+  /* SPACING SYSTEM - Generous, breathable */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
   
-  /* ════════════════════════════════════════════════════════════════════════
-     TYPOGRAPHY — Elegant, human, readable
-     ════════════════════════════════════════════════════════════════════════ */
-  --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* TYPOGRAPHY */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-accent: 'Plus Jakarta Sans', sans-serif;
   
-  /* ════════════════════════════════════════════════════════════════════════
-     SHADOWS — Soft, premium, layered
-     ════════════════════════════════════════════════════════════════════════ */
+  /* SHADOWS - Soft, premium, layered */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
@@ -146,9 +127,7 @@
   --shadow-inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   --shadow-inner-soft: inset 0 2px 4px rgba(0, 0, 0, 0.2);
   
-  /* ════════════════════════════════════════════════════════════════════════
-     BORDER RADIUS — Soft, approachable
-     ════════════════════════════════════════════════════════════════════════ */
+  /* BORDER RADIUS - Soft, approachable */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -157,9 +136,7 @@
   --radius-3xl: 32px;
   --radius-full: 9999px;
   
-  /* ════════════════════════════════════════════════════════════════════════
-     ANIMATIONS — Smooth, delightful, premium
-     ════════════════════════════════════════════════════════════════════════ */
+  /* ANIMATIONS - Smooth, delightful, premium */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
@@ -172,10 +149,7 @@
   --duration-slower: 600ms;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   BASE STYLES
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* BASE STYLES */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -210,10 +184,7 @@ body {
   outline-offset: 2px;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   PREMIUM GLASSMORPHISM CARDS
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* PREMIUM GLASSMORPHISM CARDS */
 .gg-card {
   background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(180%);
@@ -245,35 +216,6 @@ body {
   border-color: var(--glass-border-hover);
   transform: translateY(-4px) scale(1.005);
   box-shadow: var(--shadow-lg), var(--shadow-glow-primary);
-}
-
-/* Premium card with gradient accent */
-.gg-card-premium {
-  background: linear-gradient(135deg, 
-    rgba(41, 37, 36, 0.9) 0%, 
-    rgba(28, 25, 23, 0.95) 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.gg-card-premium::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    var(--primary-500), 
-    var(--coral-400), 
-    var(--primary-500)
-  );
-  opacity: 0;
-  transition: opacity var(--duration-normal);
-}
-
-.gg-card-premium:hover::after {
-  opacity: 1;
 }
 
 /* Stat cards with top accent */
@@ -313,7 +255,6 @@ body {
 
 /* Stat value styling */
 .gg-stat-value {
-  font-family: var(--font-display);
   font-size: 2.75rem;
   font-weight: 700;
   line-height: 1;
@@ -353,10 +294,7 @@ body {
   border-color: rgba(244, 63, 94, 0.2);
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   PREMIUM BUTTONS — Tactile, satisfying
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* PREMIUM BUTTONS - Tactile, satisfying */
 .gg-btn {
   display: inline-flex;
   align-items: center;
@@ -393,7 +331,7 @@ body {
   transform: scale(0.97);
 }
 
-/* Primary button — Teal gradient */
+/* Primary button - Teal gradient */
 .gg-btn-primary {
   background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
   color: white;
@@ -411,65 +349,7 @@ body {
     0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Coral accent button */
-.gg-btn-coral {
-  background: linear-gradient(135deg, var(--coral-500) 0%, var(--coral-600) 100%);
-  color: white;
-  box-shadow: 
-    0 4px 16px rgba(244, 63, 94, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.gg-btn-coral:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 8px 24px rgba(244, 63, 94, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
-
-/* Secondary button */
-.gg-btn-secondary {
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-inner-light), var(--shadow-xs);
-}
-
-.gg-btn-secondary:hover {
-  background: var(--bg-surface);
-  border-color: var(--glass-border-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Ghost button */
-.gg-btn-ghost {
-  background: transparent;
-  color: var(--text-tertiary);
-}
-
-.gg-btn-ghost:hover {
-  background: var(--glass-bg);
-  color: var(--text-primary);
-}
-
-/* Size variants */
-.gg-btn-sm {
-  padding: var(--space-2) var(--space-4);
-  font-size: 0.875rem;
-  border-radius: var(--radius-lg);
-}
-
-.gg-btn-lg {
-  padding: var(--space-4) var(--space-8);
-  font-size: 1rem;
-  border-radius: var(--radius-2xl);
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   FORM ELEMENTS — Elegant, inviting
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* FORM ELEMENTS - Elegant, inviting */
 .gg-input {
   width: 100%;
   padding: var(--space-4) var(--space-5);
@@ -497,20 +377,7 @@ body {
   color: var(--text-muted);
 }
 
-/* Select styling */
-.gg-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a8a29e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 18px;
-  padding-right: 48px;
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   BADGES — Premium status indicators
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* BADGES - Premium status indicators */
 .gg-badge {
   display: inline-flex;
   align-items: center;
@@ -548,22 +415,12 @@ body {
   border-color: rgba(20, 184, 166, 0.25);
 }
 
-.gg-badge-purple {
-  background: rgba(168, 85, 247, 0.12);
-  color: var(--purple-400);
-  border-color: rgba(168, 85, 247, 0.25);
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   SECTION HEADERS
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* SECTION HEADERS */
 .gg-section-header {
   margin-bottom: var(--space-8);
 }
 
 .gg-section-title {
-  font-family: var(--font-display);
   font-size: 1.875rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -578,10 +435,7 @@ body {
   line-height: 1.5;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   CHART CONTAINERS — Premium data visualization
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* CHART CONTAINERS - Premium data visualization */
 .gg-chart-wrapper {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
@@ -592,10 +446,7 @@ body {
   position: relative;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   LOADING STATES — Elegant, not just spinners
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* LOADING STATES - Elegant, not just spinners */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -619,12 +470,6 @@ body {
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-@keyframes dots {
-  0%, 20% { content: '.'; }
-  40% { content: '..'; }
-  60%, 100% { content: '...'; }
 }
 
 .gg-skeleton {
@@ -666,10 +511,7 @@ body {
   animation: spin-slow 1.5s linear infinite reverse;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   EMPTY STATES — Beautiful, not just "No data"
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* EMPTY STATES - Beautiful, not just "No data" */
 .gg-empty-state {
   text-align: center;
   padding: var(--space-16) var(--space-8);
@@ -693,7 +535,6 @@ body {
 }
 
 .gg-empty-state-title {
-  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -708,11 +549,7 @@ body {
   line-height: 1.6;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   UTILITY CLASSES
-   ════════════════════════════════════════════════════════════════════════════ */
-
-/* Gradient text */
+/* UTILITY CLASSES */
 .text-gradient {
   background: linear-gradient(135deg, var(--primary-400), var(--coral-400));
   -webkit-background-clip: text;
@@ -734,7 +571,6 @@ body {
   background-clip: text;
 }
 
-/* Glass effect */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(180%);
@@ -742,7 +578,6 @@ body {
   border: 1px solid var(--glass-border);
 }
 
-/* Line clamp */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -764,10 +599,7 @@ body {
   overflow: hidden;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   SCROLLBAR — Beautiful, minimal
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* SCROLLBAR - Beautiful, minimal */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -789,36 +621,13 @@ body {
   background: var(--text-subtle);
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   ANIMATION CLASSES
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* ANIMATION CLASSES */
 .animate-fade-in {
   animation: fadeIn var(--duration-slow) var(--ease-out-expo);
 }
 
 .animate-fade-in-up {
   animation: fadeInUp var(--duration-slow) var(--ease-out-expo);
-}
-
-.animate-fade-in-down {
-  animation: fadeInDown var(--duration-slow) var(--ease-out-expo);
-}
-
-.animate-slide-in-right {
-  animation: slideInRight var(--duration-slow) var(--ease-out-expo);
-}
-
-.animate-scale-in {
-  animation: scaleIn var(--duration-slow) var(--ease-out-spring);
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-glow {
-  animation: glow-pulse 3s ease-in-out infinite;
 }
 
 @keyframes fadeIn {
@@ -837,51 +646,7 @@ body {
   }
 }
 
-@keyframes fadeInDown {
-  from { 
-    opacity: 0; 
-    transform: translateY(-20px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-@keyframes slideInRight {
-  from { 
-    opacity: 0; 
-    transform: translateX(-30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateX(0); 
-  }
-}
-
-@keyframes scaleIn {
-  from { 
-    opacity: 0; 
-    transform: scale(0.95); 
-  }
-  to { 
-    opacity: 1; 
-    transform: scale(1); 
-  }
-}
-
-/* Stagger animation delays */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
-
-/* ════════════════════════════════════════════════════════════════════════════
-   PROGRESS BARS — Beautiful indicators
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* PROGRESS BARS - Beautiful indicators */
 .gg-progress {
   width: 100%;
   height: 8px;
@@ -907,10 +672,7 @@ body {
   animation: shimmer 2s infinite;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   ALERTS — Beautiful notifications
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* ALERTS - Beautiful notifications */
 .gg-alert {
   display: flex;
   align-items: flex-start;
@@ -945,10 +707,7 @@ body {
   color: var(--primary-400);
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   MOBILE RESPONSIVE ADJUSTMENTS
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* MOBILE RESPONSIVE ADJUSTMENTS */
 @media (max-width: 768px) {
   :root {
     --space-6: 1.25rem;
@@ -977,10 +736,7 @@ body {
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   FOCUS AND ACCESSIBILITY
-   ════════════════════════════════════════════════════════════════════════════ */
-
+/* FOCUS AND ACCESSIBILITY */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

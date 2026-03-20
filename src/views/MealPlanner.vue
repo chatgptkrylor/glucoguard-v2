@@ -87,7 +87,8 @@ const mealEmoji: Record<string, string> = {
           <div class="flex items-center gap-2">
             <button
               @click="currentGlucose = Math.max(70, currentGlucose - 10); refreshRecommendations()"
-              class="w-9 h-9 flex items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all"
+              class="flex items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all flex-shrink-0"
+              style="width:44px;height:44px;"
             >
               <Minus class="w-4 h-4" />
             </button>
@@ -96,11 +97,12 @@ const mealEmoji: Record<string, string> = {
               type="number"
               @change="refreshRecommendations()"
               class="input-field text-center font-bold text-stone-800"
-              style="padding:0.5rem"
+              style="padding:0.5rem;min-height:44px;font-size:1rem;"
             />
             <button
               @click="currentGlucose = Math.min(400, currentGlucose + 10); refreshRecommendations()"
-              class="w-9 h-9 flex items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all"
+              class="flex items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all flex-shrink-0"
+              style="width:44px;height:44px;"
             >
               <Plus class="w-4 h-4" />
             </button>
@@ -115,6 +117,7 @@ const mealEmoji: Record<string, string> = {
             type="number"
             @change="refreshRecommendations()"
             class="input-field text-center font-bold text-stone-800"
+            style="min-height:44px;font-size:1rem;"
           />
         </div>
 
@@ -280,7 +283,7 @@ const mealEmoji: Record<string, string> = {
 
     <!-- ── Meal Detail Modal ── -->
     <Transition name="modal-fade">
-      <div v-if="selectedMeal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.4);">
+      <div v-if="selectedMeal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4" style="background:rgba(0,0,0,0.4);" @click.self="selectedMeal = null">
         <div class="modal-panel">
           <div class="flex items-center justify-between mb-5">
             <h3 class="text-lg font-bold text-stone-800 pr-4 leading-snug">{{ selectedMeal.name }}</h3>
@@ -395,6 +398,15 @@ const mealEmoji: Record<string, string> = {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 639px) {
+  .modal-panel {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    max-width: 100%;
+    padding: 1.5rem 1.25rem;
+  }
 }
 
 .modal-fade-enter-active, .modal-fade-leave-active {

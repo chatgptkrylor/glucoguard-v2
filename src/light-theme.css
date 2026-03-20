@@ -654,3 +654,191 @@ body {
 }
 
 .streak-icon { animation: streak-glow 2.5s ease-in-out infinite; }
+
+/* ============================
+   MOBILE RESPONSIVE
+   ============================ */
+@media (max-width: 767px) {
+  /* Larger touch targets */
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+    padding: 0.75rem 1.25rem;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  .input-field {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  /* Reduce card padding on small screens */
+  .card,
+  .card-premium {
+    padding: 1.125rem;
+    border-radius: var(--r-lg);
+  }
+
+  .stat-hero {
+    padding: 1.125rem;
+    border-radius: var(--r-lg);
+  }
+
+  /* Food pills — larger tap target */
+  .food-pill {
+    padding: 0.5rem 0.875rem;
+    min-height: 40px;
+    font-size: 0.875rem;
+  }
+
+  /* Section titles — slightly larger */
+  .section-title {
+    font-size: 1rem;
+  }
+
+  /* Stat value — slightly smaller on tiny screens */
+  .stat-value {
+    font-size: 2.25rem;
+  }
+}
+
+/* ============================
+   MOBILE RESPONSIVE
+   ============================ */
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  /* Stack grid columns on mobile */
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4,
+  .lg\\:grid-cols-2,
+  .lg\\:grid-cols-3,
+  .lg\\:grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Reduce padding on mobile */
+  .p-6, .p-8 {
+    padding: 1rem !important;
+  }
+  
+  /* Make cards full width with margin */
+  .card, .card-light, .card-premium {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  /* Larger touch targets for mobile */
+  button, .btn, .btn-primary, .btn-secondary {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Stack stat cards */
+  .stat-hero, .stat-card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Reduce font sizes on mobile */
+  .text-4xl, .text-5xl {
+    font-size: 2rem !important;
+  }
+  
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+  
+  /* Make inputs larger for touch */
+  input, select, textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Sidebar becomes bottom nav or hidden */
+  aside {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100% !important;
+    height: auto;
+    z-index: 50;
+    border-top: 1px solid var(--border-light);
+    border-right: none;
+  }
+  
+  /* Main content adjusts for bottom nav */
+  main {
+    margin-bottom: 80px;
+  }
+  
+  /* Hide sidebar toggle on mobile */
+  .sidebar-toggle {
+    display: none;
+  }
+  
+  /* Horizontal scroll for charts if needed */
+  .chart-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Food pills wrap on mobile */
+  .food-pills {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  /* Bottom navigation for mobile */
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-light);
+    padding: 0.5rem;
+    justify-content: space-around;
+    z-index: 100;
+  }
+  
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+  
+  .mobile-nav-item.active {
+    color: var(--teal-500);
+  }
+  
+  /* Hide desktop-only elements */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Show mobile-only elements */
+  .mobile-only {
+    display: block !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop - hide mobile elements */
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}

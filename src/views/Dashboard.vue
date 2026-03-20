@@ -235,7 +235,7 @@ const doughnutData = computed(() => ({
       </Transition>
 
       <!-- ── HERO STATS ── -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 
         <!-- Current Glucose — hero teal card -->
         <div class="stat-hero relative overflow-hidden col-span-1">
@@ -373,22 +373,23 @@ const doughnutData = computed(() => ({
           <div class="flex items-center gap-3 mb-4">
             <Transition name="fade" mode="out-in">
               <div v-if="!showQuickLog" key="btn">
-                <button @click="showQuickLog = true" class="btn-primary py-2 px-4 text-sm">
+                <button @click="showQuickLog = true" class="btn-primary text-sm" style="min-height:44px;padding:0.625rem 1.125rem;">
                   <Plus style="width:15px;height:15px" />
                   Log Glucose
                 </button>
               </div>
-              <div v-else key="input" class="flex items-center gap-2">
+              <div v-else key="input" class="flex items-center gap-2 w-full">
                 <input
                   v-model="loggedGlucose"
                   type="number"
                   placeholder="mg/dL"
-                  class="input-field w-28 py-2 text-sm"
+                  class="input-field w-28"
+                  style="min-height:44px;font-size:1rem;"
                   min="40" max="400"
                   @keyup.enter="logGlucose"
                 />
-                <button @click="logGlucose" class="btn-primary py-2 px-4 text-sm">Save</button>
-                <button @click="showQuickLog = false" class="btn-secondary py-2 px-3 text-sm">✕</button>
+                <button @click="logGlucose" class="btn-primary text-sm" style="min-height:44px;">Save</button>
+                <button @click="showQuickLog = false" class="btn-secondary text-sm" style="min-height:44px;padding:0.625rem 0.875rem;">✕</button>
               </div>
             </Transition>
           </div>
@@ -451,7 +452,7 @@ const doughnutData = computed(() => ({
             <span class="text-xs text-stone-400">· 75% in range today</span>
           </div>
 
-          <div class="h-64">
+          <div class="h-44 sm:h-56 lg:h-64">
             <Line :data="lineChartData" :options="lineChartOptions" />
           </div>
 
@@ -476,7 +477,7 @@ const doughnutData = computed(() => ({
           <h3 class="section-title mb-0.5">Time in Range</h3>
           <p class="section-subtitle mb-4">Distribution today</p>
 
-          <div class="flex-1 min-h-48 relative">
+          <div class="flex-1 min-h-36 sm:min-h-48 relative">
             <Doughnut :data="doughnutData" :options="doughnutOptions" />
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div class="text-center">

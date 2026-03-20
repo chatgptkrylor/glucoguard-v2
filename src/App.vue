@@ -21,11 +21,13 @@ import FoodDatabase from './views/FoodDatabase.vue'
 const activeTab = ref('dashboard')
 const sidebarOpen = ref(true)
 const isMobile = ref(false)
+const isPhone = ref(false)
 const isLoaded = ref(false)
 
 const handleResize = () => {
   const wasMobile = isMobile.value
   isMobile.value = window.innerWidth < 1024
+  isPhone.value = window.innerWidth < 768
   if (isMobile.value !== wasMobile) {
     sidebarOpen.value = !isMobile.value
   }
@@ -33,6 +35,7 @@ const handleResize = () => {
 
 onMounted(() => {
   isMobile.value = window.innerWidth < 1024
+  isPhone.value = window.innerWidth < 768
   sidebarOpen.value = !isMobile.value
   window.addEventListener('resize', handleResize)
   setTimeout(() => { isLoaded.value = true }, 80)
@@ -40,11 +43,15 @@ onMounted(() => {
 })
 
 const menuItems = [
-  { id: 'dashboard',    label: 'Dashboard',     icon: LayoutDashboard, color: 'teal' },
-  { id: 'meal-planner', label: 'Meal Planner',  icon: Utensils,        color: 'orange' },
-  { id: 'alerts',       label: 'Health Alerts', icon: Bell,            color: 'red' },
-  { id: 'food-db',      label: 'Food Database', icon: Database,        color: 'emerald' },
+  { id: 'dashboard',    label: 'Dashboard',     shortLabel: 'Home',    icon: LayoutDashboard, color: 'teal' },
+  { id: 'meal-planner', label: 'Meal Planner',  shortLabel: 'Meals',   icon: Utensils,        color: 'orange' },
+  { id: 'alerts',       label: 'Health Alerts', shortLabel: 'Alerts',  icon: Bell,            color: 'red' },
+  { id: 'food-db',      label: 'Food Database', shortLabel: 'Foods',   icon: Database,        color: 'emerald' },
 ]
+
+const activeColors: Record<string, string> = {
+  teal: '#0d9488', orange: '#c2410c', red: '#b91c1c', emerald: '#15803d',
+}
 
 const currentView = computed(() => {
   switch (activeTab.value) {
@@ -73,17 +80,17 @@ function toggleSidebar() {
 <template>
   <div class="app-root" :class="{ 'is-loaded': isLoaded }">
 
-    <!-- Mobile overlay -->
+    <!-- Mobile overlay (tablet only, not phone) -->
     <Transition name="fade">
       <div
-        v-if="sidebarOpen && isMobile"
+        v-if="sidebarOpen && isMobile && !isPhone"
         class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40 lg:hidden"
         @click="sidebarOpen = false"
       />
     </Transition>
 
-    <!-- ===== SIDEBAR ===== -->
-    <aside :class="['sidebar', isMobile
+    <!-- ===== SIDEBAR (hidden on phone, visible on tablet/desktop) ===== -->
+    <aside v-if="!isPhone" :class="['sidebar', isMobile
         ? sidebarOpen ? 'sidebar--mobile-open' : 'sidebar--mobile-closed'
         : sidebarOpen ? 'sidebar--desktop-open' : 'sidebar--desktop-collapsed'
     ]">
@@ -167,6 +174,7 @@ function toggleSidebar() {
       <header class="topbar">
         <div class="topbar-left">
           <button
+            v-if="!isPhone"
             @click="sidebarOpen = true"
             class="lg:hidden p-2 -ml-2 text-stone-500 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors"
           >
@@ -189,13 +197,32 @@ function toggleSidebar() {
       </header>
 
       <!-- Content -->
-      <div class="content-area">
+      <div class="content-area" :class="{ 'content-area--phone': isPhone }">
         <Transition name="page" mode="out-in">
           <component :is="currentView" :key="activeTab" />
         </Transition>
       </div>
 
     </main>
+
+    <!-- ===== BOTTOM NAV (phone only) ===== -->
+    <nav v-if="isPhone" class="bottom-nav" role="navigation" aria-label="Main navigation">
+      <button
+        v-for="item in menuItems"
+        :key="item.id"
+        @click="selectTab(item.id)"
+        :class="['bottom-nav-item', activeTab === item.id ? 'bottom-nav-item--active' : '']"
+        :style="activeTab === item.id ? { color: activeColors[item.color] } : {}"
+        :aria-label="item.label"
+        :aria-current="activeTab === item.id ? 'page' : undefined"
+      >
+        <div :class="['bnav-icon-wrap', activeTab === item.id ? `bnav-bg-${item.color}` : '']">
+          <component :is="item.icon" style="width:20px;height:20px" />
+        </div>
+        <span class="bnav-label">{{ item.shortLabel }}</span>
+      </button>
+    </nav>
+
   </div>
 </template>
 
@@ -578,5 +605,80 @@ function toggleSidebar() {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* ── Bottom Navigation (phone) ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid #e7e5e4;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -2px 20px rgba(0,0,0,0.06);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #a8a29e;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 56px;
+  font-family: inherit;
+}
+
+.bnav-icon-wrap {
+  width: 44px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  transition: background 0.2s ease;
+}
+
+.bnav-bg-teal    { background: #ccfbf1; }
+.bnav-bg-orange  { background: #ffedd5; }
+.bnav-bg-red     { background: #fee2e2; }
+.bnav-bg-emerald { background: #dcfce7; }
+
+.bnav-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* ── Phone-specific content spacing ── */
+.content-area--phone {
+  padding: 1rem 1rem calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* ── Mobile topbar ── */
+@media (max-width: 767px) {
+  .topbar {
+    padding: 0.75rem 1rem;
+  }
+  .topbar-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .topbar-title {
+    font-size: 1rem;
+  }
 }
 </style>

@@ -1,32 +1,48 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Line, Doughnut } from 'vue-chartjs'
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler } from 'chart.js'
-import { Activity, TrendingUp, TrendingDown, CheckCircle, Info, AlertTriangle, Loader2, Heart, Zap, Moon } from 'lucide-vue-next'
+import {
+  Chart as ChartJS,
+  CategoryScale, LinearScale, PointElement, LineElement,
+  ArcElement, Title, Tooltip, Legend, Filler
+} from 'chart.js'
+import {
+  Activity, TrendingUp, TrendingDown, CheckCircle,
+  Info, AlertTriangle, Loader2, Zap
+} from 'lucide-vue-next'
 import { analyzeGlucoseData } from '../ai/glucoseAnalysis'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend, Filler)
+ChartJS.register(
+  CategoryScale, LinearScale, PointElement, LineElement,
+  ArcElement, Title, Tooltip, Legend, Filler
+)
 
 const isLoading = ref(true)
 const selectedPeriod = ref<'24h' | '7d' | '30d'>('24h')
 
 onMounted(() => {
-  setTimeout(() => isLoading.value = false, 1500)
+  setTimeout(() => isLoading.value = false, 1400)
 })
 
 const readings = ref([
   { value: 120, time: '8 AM' },
   { value: 145, time: '10 AM' },
-  { value: 130, time: '1 PM' },
-  { value: 160, time: '2:30 PM' },
-  { value: 125, time: '6 PM' },
-  { value: 150, time: '8 PM' },
-  { value: 135, time: '10 PM' },
+  { value: 130, time: '12 PM' },
+  { value: 160, time: '2 PM' },
+  { value: 125, time: '4 PM' },
+  { value: 150, time: '7 PM' },
+  { value: 135, time: '9 PM' },
 ])
 
-const stats = computed(() => analyzeGlucoseData(readings.value.map(r => ({ value: r.value, timestamp: new Date(), mealContext: 'fasting' as const }))))
+const stats = computed(() =>
+  analyzeGlucoseData(readings.value.map(r => ({
+    value: r.value,
+    timestamp: new Date(),
+    mealContext: 'fasting' as const
+  })))
+)
 
-// Premium chart options
+/* ── Chart configs (light theme) ── */
 const lineChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -34,30 +50,28 @@ const lineChartOptions = {
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(3, 7, 18, 0.95)',
-      titleColor: '#f9fafb',
-      bodyColor: '#f9fafb',
-      borderColor: 'rgba(20, 184, 166, 0.3)',
+      backgroundColor: 'rgba(28,25,23,0.92)',
+      titleColor: '#fafaf9',
+      bodyColor: '#d6d3d1',
+      borderColor: 'rgba(20,184,166,0.4)',
       borderWidth: 1,
-      padding: 16,
-      cornerRadius: 12,
-      titleFont: { size: 14, weight: '600' },
-      bodyFont: { size: 13 },
+      padding: 14,
+      cornerRadius: 10,
+      titleFont: { size: 13, weight: '600' as const },
+      bodyFont: { size: 12 },
       displayColors: false,
-      callbacks: {
-        label: (context: any) => ` ${context.parsed.y} mg/dL`
-      }
+      callbacks: { label: (ctx: any) => ` ${ctx.parsed.y} mg/dL` }
     }
   },
   scales: {
     y: {
-      min: 50, max: 200,
-      grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-      ticks: { color: '#6b7280', font: { size: 11 }, padding: 8 }
+      min: 50, max: 210,
+      grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+      ticks: { color: '#a8a29e', font: { size: 11 }, padding: 8 }
     },
     x: {
       grid: { display: false },
-      ticks: { color: '#6b7280', font: { size: 11 }, padding: 8 }
+      ticks: { color: '#a8a29e', font: { size: 11 }, padding: 8 }
     }
   }
 }
@@ -68,31 +82,32 @@ const lineChartData = computed(() => ({
     data: readings.value.map(r => r.value),
     borderColor: '#14b8a6',
     backgroundColor: (ctx: any) => {
-      const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 300)
-      gradient.addColorStop(0, 'rgba(20, 184, 166, 0.3)')
-      gradient.addColorStop(1, 'rgba(20, 184, 166, 0)')
+      const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280)
+      gradient.addColorStop(0, 'rgba(20,184,166,0.18)')
+      gradient.addColorStop(1, 'rgba(20,184,166,0.00)')
       return gradient
     },
     fill: true,
-    tension: 0.4,
-    pointRadius: 6,
-    pointHoverRadius: 8,
+    tension: 0.45,
+    pointRadius: 5,
+    pointHoverRadius: 7,
     pointBackgroundColor: '#14b8a6',
-    pointBorderColor: '#0f172a',
-    pointBorderWidth: 3,
+    pointBorderColor: '#ffffff',
+    pointBorderWidth: 2,
+    borderWidth: 2.5,
   }]
 }))
 
 const doughnutOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  cutout: '75%',
+  cutout: '76%',
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(3, 7, 18, 0.95)',
-      bodyColor: '#f9fafb',
-      borderColor: 'rgba(255,255,255,0.1)',
+      backgroundColor: 'rgba(28,25,23,0.92)',
+      bodyColor: '#fafaf9',
+      borderColor: 'rgba(0,0,0,0.1)',
       borderWidth: 1,
       padding: 12,
       cornerRadius: 10,
@@ -101,237 +116,271 @@ const doughnutOptions = {
 }
 
 const doughnutData = computed(() => ({
-  labels: ['In Range', 'Below', 'Above'],
+  labels: ['In Range', 'Above', 'Below'],
   datasets: [{
-    data: [75, 10, 15],
-    backgroundColor: ['#22c55e', '#f43f5e', '#f59e0b'],
+    data: [75, 15, 10],
+    backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
     borderWidth: 0,
-    hoverOffset: 4
+    hoverOffset: 6
   }]
 }))
 </script>
 
 <template>
-  <div class="space-y-8">
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
-      <div class="relative">
-        <div class="w-16 h-16 rounded-full border-2 border-[#14b8a6]/20 border-t-[#14b8a6] animate-spin"></div>
-      </div>
-      <p class="mt-6 text-[#9ca3af] text-lg">Analyzing your health data...</p>
-      <p class="mt-2 text-[#6b7280] text-sm">This takes just a moment</p>
+  <div class="space-y-6">
+
+    <!-- Loading state -->
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-24">
+      <div class="w-14 h-14 rounded-full border-2 border-teal-200 border-t-teal-500 animate-spin mb-5" />
+      <p class="text-stone-600 font-medium">Analyzing your health data…</p>
+      <p class="text-stone-400 text-sm mt-1">Just a moment</p>
     </div>
 
-    <div v-else class="space-y-8 animate-fade-in-up">
-      <!-- Hero Stats -->
+    <div v-else class="space-y-6 animate-fade-in-up">
+
+      <!-- ── HERO STATS ── -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Current Glucose -->
-        <div class="stat-hero relative overflow-hidden">
+
+        <!-- Current Glucose — hero teal card -->
+        <div class="stat-hero relative overflow-hidden col-span-1">
           <div class="relative z-10">
-            <div class="flex items-center gap-2 mb-3">
-              <div class="w-10 h-10 rounded-xl bg-[#14b8a6]/20 flex items-center justify-center">
-                <Activity class="w-5 h-5 text-[#14b8a6]" />
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+                <Activity class="w-4.5 h-4.5 text-white" style="width:18px;height:18px" />
               </div>
+              <span class="badge" style="background:rgba(255,255,255,0.2);color:white;font-size:0.7rem;">
+                <TrendingDown class="w-3 h-3" style="width:12px;height:12px" />
+                In Range
+              </span>
             </div>
-            <div class="stat-value text-4xl lg:text-5xl">142</div>
-            <div class="text-[#9ca3af] text-sm mt-1">mg/dL</div>
-            <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#22c55e]/10 text-[#4ade80] text-xs font-semibold">
-              <TrendingDown class="w-3 h-3" />
-              In Range
-            </div>
+            <div class="text-white/75 text-xs font-medium mb-1 uppercase tracking-wide">Current Glucose</div>
+            <div class="stat-value text-white">142</div>
+            <div class="text-white/70 text-sm mt-1">mg/dL</div>
           </div>
         </div>
 
         <!-- Time in Range -->
         <div class="card-premium">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-[#22c55e]/20 flex items-center justify-center">
-              <CheckCircle class="w-5 h-5 text-[#22c55e]" />
-            </div>
+          <div class="w-9 h-9 rounded-xl icon-green flex items-center justify-center mb-3">
+            <CheckCircle class="w-4.5 h-4.5" style="width:18px;height:18px" />
           </div>
-          <div class="text-4xl lg:text-5xl font-bold text-white">{{ Math.round(stats.timeInRange.percentage) }}%</div>
-          <div class="text-[#9ca3af] text-sm mt-1">Time in Range</div>
-          <div class="mt-3 text-[#6b7280] text-xs">Target: 70%+</div>
+          <div class="text-stone-500 text-xs font-medium uppercase tracking-wide mb-1">Time in Range</div>
+          <div class="text-3xl lg:text-4xl font-bold text-stone-800">{{ Math.round(stats.timeInRange.percentage) }}%</div>
+          <div class="text-xs text-stone-400 mt-1.5">Target: 70%+</div>
+          <div class="progress-track mt-3">
+            <div class="progress-green" :style="`width:${Math.round(stats.timeInRange.percentage)}%`" />
+          </div>
         </div>
 
-        <!-- Average -->
+        <!-- 7-Day Average -->
         <div class="card-premium">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-              <TrendingUp class="w-5 h-5 text-blue-400" />
-            </div>
+          <div class="w-9 h-9 rounded-xl icon-blue flex items-center justify-center mb-3">
+            <TrendingUp class="w-4.5 h-4.5" style="width:18px;height:18px" />
           </div>
-          <div class="text-4xl lg:text-5xl font-bold text-white">{{ Math.round(stats.average) }}</div>
-          <div class="text-[#9ca3af] text-sm mt-1">7-Day Average</div>
-          <div class="mt-3 text-[#6b7280] text-xs">mg/dL</div>
+          <div class="text-stone-500 text-xs font-medium uppercase tracking-wide mb-1">7-Day Average</div>
+          <div class="text-3xl lg:text-4xl font-bold text-stone-800">{{ Math.round(stats.average) }}</div>
+          <div class="text-xs text-stone-400 mt-1.5">mg/dL</div>
         </div>
 
-        <!-- HbA1c -->
+        <!-- Est. HbA1c -->
         <div class="card-premium">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-              <Info class="w-5 h-5 text-purple-400" />
-            </div>
+          <div class="w-9 h-9 rounded-xl icon-purple flex items-center justify-center mb-3">
+            <Info class="w-4.5 h-4.5" style="width:18px;height:18px" />
           </div>
-          <div class="text-4xl lg:text-5xl font-bold text-white">{{ stats.estimatedHbA1c.toFixed(1) }}</div>
-          <div class="text-[#9ca3af] text-sm mt-1">Est. HbA1c</div>
-          <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f43f5e]/10 text-[#fb7185] text-xs font-semibold">
-            <AlertTriangle class="w-3 h-3" />
-003e
-            Above Target
+          <div class="text-stone-500 text-xs font-medium uppercase tracking-wide mb-1">Est. HbA1c</div>
+          <div class="text-3xl lg:text-4xl font-bold text-stone-800">{{ stats.estimatedHbA1c.toFixed(1) }}</div>
+          <div class="mt-2">
+            <span class="badge badge-warning">
+              <AlertTriangle style="width:10px;height:10px" />
+              Above Target
+            </span>
           </div>
         </div>
+
       </div>
 
-      <!-- Charts Section -->
+      <!-- ── CHARTS ── -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
         <!-- Glucose Trend -->
-        <div class="lg:col-span-2 card-premium">
-          <div class="flex items-center justify-between mb-6">
+        <div class="card-premium lg:col-span-2">
+          <div class="flex items-start justify-between mb-5">
             <div>
-              <h3 class="text-xl font-bold text-white">Glucose Trend</h3>
-              <p class="text-[#6b7280] text-sm mt-1">Your levels over the last 24 hours</p>
+              <h3 class="section-title">Glucose Trend</h3>
+              <p class="section-subtitle">Your levels over the last 24 hours</p>
             </div>
-            <div class="flex bg-[#111827] rounded-xl p-1">
-              <button 
-                v-for="period in ['24h', '7d', '30d']" 
+            <!-- Period selector -->
+            <div class="flex items-center bg-stone-100 rounded-xl p-1 gap-0.5">
+              <button
+                v-for="period in ['24h','7d','30d']"
                 :key="period"
                 @click="selectedPeriod = period as any"
                 :class="[
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  selectedPeriod === period 
-                    ? 'bg-[#14b8a6] text-white shadow-lg' 
-                    : 'text-[#6b7280] hover:text-white'
+                  'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                  selectedPeriod === period
+                    ? 'bg-white text-teal-600 shadow-sm'
+                    : 'text-stone-400 hover:text-stone-600'
                 ]"
-              >
-                {{ period }}
-              </button>
+              >{{ period }}</button>
             </div>
           </div>
-          
-          <div class="h-72">
+
+          <div class="h-64">
             <Line :data="lineChartData" :options="lineChartOptions" />
           </div>
-          
-          <div class="flex items-center gap-6 mt-4 pt-4 border-t border-white/5">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-[#22c55e]"></div>
-              <span class="text-[#6b7280] text-sm">In Range (70-180)</span>
+
+          <div class="flex items-center gap-5 mt-4 pt-4 border-t border-stone-100">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+              <span class="text-stone-500 text-xs">In Range (70–180)</span>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-[#f43f5e]"></div>
-              <span class="text-[#6b7280] text-sm">High/Low</span>
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-full bg-amber-400" />
+              <span class="text-stone-500 text-xs">Above Range</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-400" />
+              <span class="text-stone-500 text-xs">Below Range</span>
             </div>
           </div>
         </div>
 
-        <!-- Time in Range Chart -->
+        <!-- Time in Range Donut -->
         <div class="card-premium flex flex-col">
-          <div class="mb-4">
-            <h3 class="text-xl font-bold text-white">Time in Range</h3>
-            <p class="text-[#6b7280] text-sm mt-1">Distribution today</p>
-          </div>
-          
-          <div class="flex-1 min-h-[200px] relative">
+          <h3 class="section-title mb-0.5">Time in Range</h3>
+          <p class="section-subtitle mb-4">Distribution today</p>
+
+          <div class="flex-1 min-h-48 relative">
             <Doughnut :data="doughnutData" :options="doughnutOptions" />
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div class="text-center">
-                <div class="text-3xl font-bold text-white">75%</div>
-                <div class="text-[#6b7280] text-sm">in range</div>
+                <div class="text-3xl font-bold text-stone-800">75%</div>
+                <div class="text-stone-400 text-xs mt-0.5">in range</div>
               </div>
             </div>
           </div>
-          
-          <div class="mt-6 space-y-3">
+
+          <div class="space-y-2.5 mt-5 pt-4 border-t border-stone-100">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-[#22c55e]"></div>
-                <span class="text-[#9ca3af] text-sm">In Range</span>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                <span class="text-stone-500 text-sm">In Range</span>
               </div>
-              <span class="text-white font-semibold">75%</span>
+              <span class="text-stone-800 font-semibold text-sm">75%</span>
             </div>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
-                <span class="text-[#9ca3af] text-sm">Above</span>
+                <div class="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                <span class="text-stone-500 text-sm">Above</span>
               </div>
-              <span class="text-white font-semibold">15%</span>
+              <span class="text-stone-800 font-semibold text-sm">15%</span>
             </div>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-[#f43f5e]"></div>
-                <span class="text-[#9ca3af] text-sm">Below</span>
+                <div class="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <span class="text-stone-500 text-sm">Below</span>
               </div>
-              <span class="text-white font-semibold">10%</span>
+              <span class="text-stone-800 font-semibold text-sm">10%</span>
             </div>
           </div>
         </div>
+
       </div>
 
-      <!-- AI Insights -->
+      <!-- ── AI INSIGHTS ── -->
       <div class="card-premium">
-        <div class="flex items-center gap-4 mb-6">
-          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-            <Zap class="w-6 h-6 text-white" />
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center icon-purple">
+            <Zap class="w-5 h-5" />
           </div>
           <div>
-            <h3 class="text-xl font-bold text-white">AI Health Insights</h3>
-            <p class="text-[#6b7280] text-sm">Personalized predictions based on your patterns</p>
+            <h3 class="section-title">AI Health Insights</h3>
+            <p class="section-subtitle">Personalized predictions based on your patterns</p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Insight Card 1 -->
-          <div class="bg-[#111827] rounded-2xl p-5 border border-[#f43f5e]/20">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-white font-medium">Hypoglycemia Risk</span>
-              <span class="badge-elegant badge-warning">Medium</span>
+
+          <!-- Hypoglycemia risk — medium/amber -->
+          <div class="insight-card insight-card--amber">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-stone-700 font-semibold text-sm">Hypoglycemia Risk</span>
+              <span class="badge badge-warning">Medium</span>
             </div>
-            <div class="text-3xl font-bold text-[#fbbf24] mb-2">35%</div>
-            <div class="w-full bg-[#1f2937] rounded-full h-2 mb-4">
-              <div class="h-2 rounded-full bg-gradient-to-r from-[#f59e0b] to-[#f43f5e]" style="width: 35%"></div>
+            <div class="text-3xl font-bold text-amber-600 mb-2">35%</div>
+            <div class="progress-track mb-3">
+              <div class="progress-amber" style="width:35%" />
             </div>
-            <p class="text-[#6b7280] text-sm">Consider a small snack before bedtime</p>
+            <p class="text-stone-500 text-xs leading-relaxed">Consider a small snack before bedtime to prevent overnight lows.</p>
           </div>
 
-          <!-- Insight Card 2 -->
-          <div class="bg-[#111827] rounded-2xl p-5 border border-[#f43f5e]/20">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-white font-medium">Dawn Phenomenon</span>
-              <span class="badge-elegant badge-danger">High</span>
+          <!-- Dawn Phenomenon — high/red -->
+          <div class="insight-card insight-card--red">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-stone-700 font-semibold text-sm">Dawn Phenomenon</span>
+              <span class="badge badge-danger">High</span>
             </div>
-            <div class="text-3xl font-bold text-[#f43f5e] mb-2">78%</div>
-            <div class="w-full bg-[#1f2937] rounded-full h-2 mb-4">
-              <div class="h-2 rounded-full bg-gradient-to-r from-[#f43f5e] to-[#e11d48]" style="width: 78%"></div>
+            <div class="text-3xl font-bold text-red-500 mb-2">78%</div>
+            <div class="progress-track mb-3">
+              <div class="progress-red" style="width:78%" />
             </div>
-            <p class="text-[#6b7280] text-sm">Expect elevated morning glucose</p>
+            <p class="text-stone-500 text-xs leading-relaxed">Expect elevated morning glucose — discuss medication timing with your doctor.</p>
           </div>
 
-          <!-- Insight Card 3 -->
-          <div class="bg-[#111827] rounded-2xl p-5 border border-[#22c55e]/20">
-            <div class="flex items-center justify-between mb-4">
-              <span class="text-white font-medium">Post-Meal Spike</span>
-              <span class="badge-elegant badge-success">Low</span>
+          <!-- Post-Meal Spike — low/green -->
+          <div class="insight-card insight-card--green">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-stone-700 font-semibold text-sm">Post-Meal Spike</span>
+              <span class="badge badge-success">Low</span>
             </div>
-            <div class="text-3xl font-bold text-[#22c55e] mb-2">25%</div>
-            <div class="w-full bg-[#1f2937] rounded-full h-2 mb-4">
-              <div class="h-2 rounded-full bg-gradient-to-r from-[#22c55e] to-[#16a34a]" style="width: 25%"></div>
+            <div class="text-3xl font-bold text-emerald-600 mb-2">25%</div>
+            <div class="progress-track mb-3">
+              <div class="progress-green" style="width:25%" />
             </div>
-            <p class="text-[#6b7280] text-sm">Your meals are well balanced</p>
+            <p class="text-stone-500 text-xs leading-relaxed">Your meals are well-balanced. Keep up the great work!</p>
           </div>
+
         </div>
       </div>
+
     </div>
   </div>
 </template>
 
 <style scoped>
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out;
+  animation: fadeInUp 0.45s cubic-bezier(0.16,1,0.3,1) both;
 }
+
+/* Insight cards */
+.insight-card {
+  border-radius: 16px;
+  padding: 1.125rem;
+  border: 1px solid;
+}
+
+.insight-card--amber {
+  background: #fffbeb;
+  border-color: rgba(245,158,11,0.2);
+}
+
+.insight-card--red {
+  background: #fef2f2;
+  border-color: rgba(239,68,68,0.15);
+}
+
+.insight-card--green {
+  background: #f0fdf4;
+  border-color: rgba(34,197,94,0.2);
+}
+
+/* Icon helpers (reuse from global but scoped here for safety) */
+.icon-green  { background: #dcfce7; color: #15803d; }
+.icon-blue   { background: #dbeafe; color: #1d4ed8; }
+.icon-purple { background: #ede9fe; color: #7c3aed; }
 </style>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { 
-  LayoutDashboard, 
-  Utensils, 
-  Bell, 
+import {
+  LayoutDashboard,
+  Utensils,
+  Bell,
   Database,
   Menu,
   X,
@@ -23,11 +23,9 @@ const sidebarOpen = ref(true)
 const isMobile = ref(false)
 const isLoaded = ref(false)
 
-// Handle resize for responsive design
 const handleResize = () => {
   const wasMobile = isMobile.value
   isMobile.value = window.innerWidth < 1024
-  
   if (isMobile.value !== wasMobile) {
     sidebarOpen.value = !isMobile.value
   }
@@ -36,43 +34,35 @@ const handleResize = () => {
 onMounted(() => {
   isMobile.value = window.innerWidth < 1024
   sidebarOpen.value = !isMobile.value
-  
   window.addEventListener('resize', handleResize)
-  
-  // Trigger entrance animation
-  setTimeout(() => {
-    isLoaded.value = true
-  }, 100)
-  
+  setTimeout(() => { isLoaded.value = true }, 80)
   return () => window.removeEventListener('resize', handleResize)
 })
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'from-teal-400 to-cyan-500' },
-  { id: 'meal-planner', label: 'Meal Planner', icon: Utensils, color: 'from-orange-400 to-rose-500' },
-  { id: 'alerts', label: 'Health Alerts', icon: Bell, color: 'from-rose-400 to-pink-500' },
-  { id: 'food-db', label: 'Food Database', icon: Database, color: 'from-emerald-400 to-teal-500' },
+  { id: 'dashboard',    label: 'Dashboard',     icon: LayoutDashboard, color: 'teal' },
+  { id: 'meal-planner', label: 'Meal Planner',  icon: Utensils,        color: 'orange' },
+  { id: 'alerts',       label: 'Health Alerts', icon: Bell,            color: 'red' },
+  { id: 'food-db',      label: 'Food Database', icon: Database,        color: 'emerald' },
 ]
 
 const currentView = computed(() => {
   switch (activeTab.value) {
-    case 'dashboard': return Dashboard
+    case 'dashboard':    return Dashboard
     case 'meal-planner': return MealPlanner
-    case 'alerts': return AlertsPanel
-    case 'food-db': return FoodDatabase
-    default: return Dashboard
+    case 'alerts':       return AlertsPanel
+    case 'food-db':      return FoodDatabase
+    default:             return Dashboard
   }
 })
 
-const currentTabLabel = computed(() => {
-  return menuItems.find(item => item.id === activeTab.value)?.label || 'Dashboard'
-})
+const currentTabLabel = computed(() =>
+  menuItems.find(item => item.id === activeTab.value)?.label || 'Dashboard'
+)
 
 function selectTab(id: string) {
   activeTab.value = id
-  if (isMobile.value) {
-    sidebarOpen.value = false
-  }
+  if (isMobile.value) sidebarOpen.value = false
 }
 
 function toggleSidebar() {
@@ -81,329 +71,512 @@ function toggleSidebar() {
 </script>
 
 <template>
-  <div class="min-h-screen flex overflow-hidden" :class="{ 'is-loaded': isLoaded }">
-    <!-- Mobile Sidebar Overlay -->
+  <div class="app-root" :class="{ 'is-loaded': isLoaded }">
+
+    <!-- Mobile overlay -->
     <Transition name="fade">
-      <div 
-        v-if="sidebarOpen && isMobile" 
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+      <div
+        v-if="sidebarOpen && isMobile"
+        class="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40 lg:hidden"
         @click="sidebarOpen = false"
-      ></div>
+      />
     </Transition>
 
-    <!-- Sidebar -->
-    <aside 
-      :class="[
-        'sidebar relative z-50 flex flex-col transition-all duration-500 ease-out',
-        isMobile 
-          ? sidebarOpen ? 'fixed inset-y-0 left-0 w-80' : 'fixed inset-y-0 left-0 w-0 -translate-x-full'
-          : sidebarOpen ? 'w-72' : 'w-20'
-      ]"
-    >
-      <!-- Sidebar Background with Gradient -->
-      <div class="absolute inset-0 sidebar-bg"></div>
-      
-      <!-- Sidebar Content -->
-      <div class="relative flex flex-col h-full">
-        <!-- Logo Section -->
-        <div class="p-6 border-b border-white/5">
-          <div class="flex items-center gap-4">
-            <!-- Logo Icon -->
-            <div class="logo-icon relative flex-shrink-0">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500 flex items-center justify-center shadow-lg shadow-teal-500/25">
-                <Heart class="w-6 h-6 text-white" fill="white" />
-              </div>
-              <!-- Pulse ring -->
-              <div class="absolute inset-0 rounded-2xl border-2 border-teal-400/50 animate-ping opacity-0 logo-loaded:opacity-20"></div>
-            </div>
-            
-            <!-- Logo Text -->
-            <Transition name="slide-fade">
-              <div v-if="sidebarOpen || isMobile" class="overflow-hidden">
-                <h1 class="font-bold text-xl text-white tracking-tight">GlucoGuard</h1>
-                <div class="flex items-center gap-1.5">
-                  <Sparkles class="w-3.5 h-3.5 text-teal-400" />
-                  <span class="text-xs text-stone-400 font-medium">AI Powered</span>
-                </div>
-              </div>
-            </Transition>
-            
-            <!-- Mobile Close Button -->
-            <button 
-              v-if="isMobile && sidebarOpen" 
-              @click="sidebarOpen = false"
-              class="ml-auto p-2 text-stone-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors lg:hidden"
-            >
-              <X class="w-5 h-5" />
-            </button>
+    <!-- ===== SIDEBAR ===== -->
+    <aside :class="['sidebar', isMobile
+        ? sidebarOpen ? 'sidebar--mobile-open' : 'sidebar--mobile-closed'
+        : sidebarOpen ? 'sidebar--desktop-open' : 'sidebar--desktop-collapsed'
+    ]">
+      <div class="sidebar-inner">
+
+        <!-- Logo -->
+        <div class="sidebar-logo">
+          <div class="logo-icon">
+            <Heart class="w-5 h-5 text-white" :fill="'white'" />
           </div>
+          <Transition name="slide-fade">
+            <div v-if="sidebarOpen || isMobile" class="logo-text">
+              <span class="logo-name">GlucoGuard</span>
+              <div class="logo-badge">
+                <Sparkles class="w-3 h-3" />
+                AI Powered
+              </div>
+            </div>
+          </Transition>
+          <button
+            v-if="isMobile && sidebarOpen"
+            @click="sidebarOpen = false"
+            class="ml-auto p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+          >
+            <X class="w-5 h-5" />
+          </button>
         </div>
 
-        <!-- Navigation -->
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin">
+        <!-- Nav -->
+        <nav class="sidebar-nav">
           <button
             v-for="(item, index) in menuItems"
             :key="item.id"
             @click="selectTab(item.id)"
-            :class="[
-              'nav-item w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative overflow-hidden',
-              activeTab === item.id 
-                ? 'bg-gradient-to-r from-teal-500/20 to-cyan-500/10 text-teal-300 border border-teal-500/30 shadow-lg shadow-teal-500/10'
-                : 'text-stone-400 hover:bg-white/5 hover:text-stone-200'
-            ]"
+            :class="['nav-item', activeTab === item.id ? 'nav-item--active' : 'nav-item--idle']"
             :style="{ animationDelay: `${index * 50}ms` }"
           >
-            <!-- Active indicator line -->
-            <div 
-              v-if="activeTab === item.id"
-              class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-teal-400 to-cyan-400 rounded-full"
-            ></div>
-            
-            <!-- Icon -->
-            <div 
-              :class="[
-                'p-2.5 rounded-xl transition-all duration-300 flex-shrink-0',
-                activeTab === item.id 
-                  ? `bg-gradient-to-br ${item.color} shadow-lg` 
-                  : 'bg-stone-800/50 group-hover:bg-stone-700/50'
-              ]"
-            >
-              <component 
-                :is="item.icon" 
-                class="w-5 h-5 transition-transform duration-300"
-                :class="activeTab === item.id ? 'text-white scale-110' : 'text-stone-400 group-hover:text-stone-300'"
-              />
+            <div :class="['nav-icon', activeTab === item.id ? `nav-icon--${item.color}` : 'nav-icon--idle']">
+              <component :is="item.icon" class="w-4.5 h-4.5" style="width:18px;height:18px" />
             </div>
-            
-            <!-- Label -->
             <Transition name="slide-fade">
-              <span 
-                v-if="sidebarOpen || isMobile" 
-                class="font-semibold text-sm whitespace-nowrap"
-              >
-                {{ item.label }}
-              </span>
+              <span v-if="sidebarOpen || isMobile" class="nav-label">{{ item.label }}</span>
             </Transition>
-            
-            <!-- Active dot -->
-            <div 
-              v-if="activeTab === item.id && (sidebarOpen || isMobile)"
-              class="ml-auto w-2 h-2 rounded-full bg-teal-400 shadow-lg shadow-teal-400/50"
-            ></div>
+            <div v-if="activeTab === item.id && (sidebarOpen || isMobile)" class="nav-dot" />
           </button>
         </nav>
 
-        <!-- User Profile Card -->
-        <div class="p-4 border-t border-white/5">
-          <div 
-            :class="[
-              'flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 transition-all duration-300 hover:bg-white/10',
-              sidebarOpen || isMobile ? '' : 'justify-center'
-            ]"
-          >
-            <div class="relative flex-shrink-0">
-              <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-                <User class="w-5 h-5 text-white" />
-              </div>
-              <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-stone-900"></div>
+        <!-- User card -->
+        <div class="sidebar-footer">
+          <div :class="['user-card', !(sidebarOpen || isMobile) && 'user-card--collapsed']">
+            <div class="user-avatar">
+              <User class="w-4 h-4 text-white" />
+              <div class="user-status" />
             </div>
-            
             <Transition name="slide-fade">
-              <div v-if="sidebarOpen || isMobile" class="overflow-hidden">
-                <p class="font-semibold text-sm text-white">Patient Demo</p>
-                <p class="text-xs text-stone-500">Type 2 Diabetes</p>
+              <div v-if="sidebarOpen || isMobile" class="user-info">
+                <p class="user-name">Patient Demo</p>
+                <p class="user-type">Type 2 Diabetes</p>
               </div>
             </Transition>
           </div>
+
+          <!-- Collapse toggle (desktop) -->
+          <button
+            v-if="!isMobile"
+            @click="toggleSidebar"
+            class="collapse-btn"
+          >
+            <ChevronLeft v-if="sidebarOpen" class="w-4 h-4" />
+            <ChevronRight v-else class="w-4 h-4" />
+          </button>
         </div>
 
-        <!-- Desktop Toggle -->
-        <button
-          v-if="!isMobile"
-          @click="toggleSidebar"
-          class="p-4 border-t border-white/5 text-stone-500 hover:text-stone-300 flex items-center justify-center transition-colors group"
-        >
-          <div class="p-2 rounded-xl bg-white/5 group-hover:bg-white/10 transition-colors">
-            <ChevronLeft 
-              v-if="sidebarOpen" 
-              class="w-5 h-5 transition-transform duration-300" 
-            />
-            <ChevronRight 
-              v-else 
-              class="w-5 h-5 transition-transform duration-300" 
-            />
-          </div>
-        </button>
       </div>
     </aside>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col min-w-0 relative">
-      <!-- Top Navigation Bar -->
-      <header class="top-bar sticky top-0 z-30 flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <div class="flex items-center gap-4">
-          <!-- Mobile Menu Button -->
-          <button 
+    <!-- ===== MAIN ===== -->
+    <main class="main-content">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button
             @click="sidebarOpen = true"
-            class="lg:hidden p-2.5 -ml-2 text-stone-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
+            class="lg:hidden p-2 -ml-2 text-stone-500 hover:text-stone-800 hover:bg-stone-100 rounded-lg transition-colors"
           >
             <Menu class="w-5 h-5" />
           </button>
-          
-          <!-- Page Title -->
           <div>
-            <h2 class="text-xl font-bold text-white tracking-tight">{{ currentTabLabel }}</h2>
-            <p class="text-sm text-stone-500 hidden sm:block">Monitor your health journey</p>
+            <h2 class="topbar-title">{{ currentTabLabel }}</h2>
+            <p class="topbar-subtitle hidden sm:block">Monitor your health journey</p>
           </div>
         </div>
-        
-        <!-- Right Actions -->
-        <div class="flex items-center gap-3">
-          <!-- Notification Button -->
-          <button class="relative p-2.5 text-stone-400 hover:text-white rounded-xl hover:bg-white/5 transition-all group">
-            <Bell class="w-5 h-5 transition-transform group-hover:scale-110" />
-            <span class="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse shadow-lg shadow-rose-500/50"></span>
+        <div class="topbar-right">
+          <button class="topbar-btn relative">
+            <Bell class="w-5 h-5" />
+            <span class="notification-dot" />
           </button>
-          
-          <!-- Date Display -->
-          <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
-            <span class="text-sm text-stone-400">{{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}</span>
+          <div class="topbar-date hidden md:flex">
+            {{ new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }}
           </div>
         </div>
       </header>
 
-      <!-- Content Area -->
-      <div class="flex-1 overflow-auto p-4 lg:p-8 content-area">
+      <!-- Content -->
+      <div class="content-area">
         <Transition name="page" mode="out-in">
           <component :is="currentView" :key="activeTab" />
         </Transition>
       </div>
+
     </main>
   </div>
 </template>
 
 <style scoped>
-/* Sidebar Background */
-.sidebar-bg {
-  background: linear-gradient(180deg, 
-    rgba(28, 25, 23, 0.98) 0%, 
-    rgba(41, 37, 36, 0.95) 100%
-  );
-  backdrop-filter: blur(30px);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+/* ── Layout Root ── */
+.app-root {
+  display: flex;
+  min-height: 100vh;
+  background: #fafaf9;
+  overflow: hidden;
 }
 
-.sidebar-bg::before {
-  content: '';
+/* ── Sidebar ── */
+.sidebar {
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar--desktop-open      { width: 260px; }
+.sidebar--desktop-collapsed { width: 72px; }
+.sidebar--mobile-open  { position: fixed; inset-y: 0; left: 0; width: 280px; }
+.sidebar--mobile-closed { position: fixed; inset-y: 0; left: 0; width: 0; transform: translateX(-100%); }
+
+.sidebar-inner {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #e7e5e4;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+/* ── Logo section ── */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid #f5f5f4;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px -2px rgba(20,184,166,0.35);
+}
+
+.logo-text {
+  overflow: hidden;
+}
+
+.logo-name {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1c1917;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.logo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #0d9488;
+  background: #ccfbf1;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+}
+
+/* ── Nav ── */
+.sidebar-nav {
+  flex: 1;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-item--idle {
+  background: transparent;
+  color: #78716c;
+}
+
+.nav-item--idle:hover {
+  background: #f5f5f4;
+  color: #1c1917;
+}
+
+.nav-item--active {
+  background: #f0fdfa;
+  color: #0d9488;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(20,184,166,0.12);
+}
+
+.nav-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nav-icon--idle   { background: #f5f5f4; color: #78716c; }
+.nav-item--idle:hover .nav-icon--idle { background: #e7e5e4; color: #44403c; }
+.nav-icon--teal   { background: #ccfbf1; color: #0d9488; }
+.nav-icon--orange { background: #ffedd5; color: #c2410c; }
+.nav-icon--red    { background: #fee2e2; color: #b91c1c; }
+.nav-icon--emerald { background: #dcfce7; color: #15803d; }
+
+.nav-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex: 1;
+  text-align: left;
+}
+
+.nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #14b8a6;
+  flex-shrink: 0;
+}
+
+/* ── Footer / User ── */
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid #f5f5f4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem;
+  border-radius: 12px;
+  background: #f5f5f4;
+  transition: all 0.2s ease;
+}
+
+.user-card--collapsed { justify-content: center; }
+
+.user-avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-status {
   position: absolute;
-  inset: 0;
-  background: 
-    radial-gradient(ellipse at top right, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom left, rgba(244, 63, 94, 0.05) 0%, transparent 50%);
-  pointer-events: none;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid white;
 }
 
-/* Top Bar */
-.top-bar {
-  background: rgba(28, 25, 23, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+.user-info { overflow: hidden; }
+
+.user-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1c1917;
+  white-space: nowrap;
 }
 
-/* Content Area Background */
+.user-type {
+  font-size: 0.7rem;
+  color: #a8a29e;
+  white-space: nowrap;
+}
+
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #a8a29e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.collapse-btn:hover {
+  background: #f5f5f4;
+  color: #44403c;
+}
+
+/* ── Main content ── */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+/* ── Top bar ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.5rem;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e7e5e4;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.topbar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1c1917;
+  letter-spacing: -0.01em;
+}
+
+.topbar-subtitle {
+  font-size: 0.8rem;
+  color: #a8a29e;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.topbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #e7e5e4;
+  background: white;
+  color: #78716c;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.topbar-btn:hover {
+  background: #f5f5f4;
+  color: #1c1917;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 1.5px solid white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.topbar-date {
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0.875rem;
+  border-radius: 10px;
+  border: 1px solid #e7e5e4;
+  background: white;
+  font-size: 0.8rem;
+  color: #78716c;
+  font-weight: 500;
+}
+
+/* ── Content area ── */
 .content-area {
-  background: var(--bg-gradient-premium, linear-gradient(180deg, #0c0a09 0%, #1c1917 100%));
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 1.5rem 2rem;
+  background: #fafaf9;
 }
 
-/* Animations */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
+@media (min-width: 1024px) {
+  .content-area { padding: 2rem 2.5rem 3rem; }
 }
 
-.fade-enter-from,
-.fade-leave-to {
+/* ── Transitions ── */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-fade-enter-from, .slide-fade-leave-to {
   opacity: 0;
+  transform: translateX(-8px);
 }
 
-.slide-fade-enter-active,
-.slide-fade-leave-active {
+.page-enter-active, .page-leave-active {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-10px);
-}
-
-.page-enter-active,
-.page-leave-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 .page-enter-from {
   opacity: 0;
-  transform: translateY(20px) scale(0.98);
+  transform: translateY(12px) scale(0.99);
 }
-
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-6px);
 }
 
-/* Nav Item Animation */
+/* Nav entrance animation */
 .nav-item {
   opacity: 0;
-  transform: translateX(-20px);
-  animation: slideInNav 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform: translateX(-12px);
+  animation: navSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .is-loaded .nav-item {
-  animation-delay: calc(var(--index, 0) * 50ms);
+  animation-play-state: running;
 }
 
-@keyframes slideInNav {
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+@keyframes navSlide {
+  to { opacity: 1; transform: translateX(0); }
 }
 
-/* Logo Icon Glow */
-.logo-icon {
-  animation: logoGlow 3s ease-in-out infinite;
-}
-
-@keyframes logoGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 20px rgba(20, 184, 166, 0.3));
-  }
-  50% {
-    filter: drop-shadow(0 0 30px rgba(20, 184, 166, 0.5));
-  }
-}
-
-/* Scrollbar Styling */
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(120, 113, 108, 0.3) transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(120, 113, 108, 0.3);
-  border-radius: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(120, 113, 108, 0.5);
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

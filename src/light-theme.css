@@ -410,3 +410,247 @@ body {
 .animate-fade-in-up > *:nth-child(2) { animation-delay: 40ms; }
 .animate-fade-in-up > *:nth-child(3) { animation-delay: 80ms; }
 .animate-fade-in-up > *:nth-child(4) { animation-delay: 120ms; }
+
+/* ============================
+   TRUST BANNER & BADGES
+   ============================ */
+.trust-banner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-lg);
+  padding: 0.75rem 1.125rem;
+  box-shadow: var(--shadow-xs);
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+
+.trust-badge--teal {
+  background: var(--teal-100);
+  color: var(--teal-700);
+  border-color: rgba(20,184,166,0.2);
+}
+
+.trust-badge--blue {
+  background: var(--color-info-light);
+  color: var(--color-info-text);
+  border-color: rgba(59,130,246,0.2);
+}
+
+.trust-badge--purple {
+  background: #ede9fe;
+  color: #6d28d9;
+  border-color: rgba(139,92,246,0.2);
+}
+
+/* ============================
+   CELEBRATION BANNER
+   ============================ */
+.celebration-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1.5px solid rgba(34,197,94,0.3);
+  border-radius: var(--r-lg);
+  padding: 0.875rem 1.125rem;
+  box-shadow: 0 4px 16px -4px rgba(34,197,94,0.2);
+}
+
+/* ============================
+   STREAK CARD
+   ============================ */
+.streak-card {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid rgba(245,158,11,0.25);
+  border-radius: var(--r-xl);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.streak-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px -2px rgba(245,158,11,0.4);
+}
+
+.streak-number {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #92400e;
+}
+
+.streak-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.streak-dot--active {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 1px 4px rgba(245,158,11,0.4);
+}
+
+.streak-dot--empty {
+  background: rgba(245,158,11,0.15);
+  border: 1.5px solid rgba(245,158,11,0.2);
+}
+
+/* ============================
+   FOOD PILLS (QUICK LOG)
+   ============================ */
+.food-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.375rem 0.75rem;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.food-pill:hover {
+  border-color: var(--teal-500);
+  color: var(--teal-700);
+  background: var(--teal-50);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.food-pill--logged {
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.food-pill-carbs {
+  font-size: 0.67rem;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+/* ============================
+   TOOLTIP BOX
+   ============================ */
+.tooltip-box {
+  background: #1c1917;
+  color: #e7e5e4;
+  border-radius: var(--r-md);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ============================
+   TARGET RANGE BADGE
+   ============================ */
+.target-range-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--color-success-bg);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-success-text);
+}
+
+/* ============================
+   "WHAT THIS MEANS" SECTION
+   ============================ */
+.what-this-means {
+  background: rgba(0,0,0,0.03);
+  border-radius: var(--r-md);
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.what-this-means__label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.what-this-means__text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ============================
+   POSITIVE REINFORCEMENT
+   ============================ */
+.positive-reinforcement {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-success-bg);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: var(--r-md);
+  padding: 0.5rem 0.75rem;
+}
+
+/* ============================
+   EDUCATIONAL BANNER
+   ============================ */
+.edu-banner {
+  background: var(--color-info-bg);
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.25rem;
+}
+
+.edu-banner__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--color-info-light);
+  color: var(--color-info-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ============================
+   STREAK GLOW ANIMATION
+   ============================ */
+@keyframes streak-glow {
+  0%, 100% { box-shadow: 0 4px 12px -2px rgba(245,158,11,0.4); }
+  50%       { box-shadow: 0 4px 20px -2px rgba(245,158,11,0.7); }
+}
+
+.streak-icon { animation: streak-glow 2.5s ease-in-out infinite; }

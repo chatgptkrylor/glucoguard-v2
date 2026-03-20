@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { 
-  ChefHat, 
-  Plus, 
+import {
+  ChefHat,
+  Plus,
   Minus,
   Info,
   AlertTriangle,
@@ -12,120 +12,116 @@ import {
   Droplets,
   Wheat,
   Loader2,
-  X
+  X,
+  Calendar
 } from 'lucide-vue-next'
 import { getMealRecommendations, generateDailyPlan, MealPlan } from '../ai/dietEngine'
 
-const currentGlucose = ref(140)
-const targetGlucose = ref(100)
-const selectedMealType = ref<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast')
-const selectedRegion = ref<'north' | 'south' | 'east' | 'west' | 'any'>('any')
-const showDailyPlan = ref(false)
-const isLoading = ref(false)
-const selectedMeal = ref<MealPlan | null>(null)
+const currentGlucose   = ref(140)
+const targetGlucose    = ref(100)
+const selectedMealType = ref<'breakfast'|'lunch'|'dinner'|'snack'>('breakfast')
+const selectedRegion   = ref<'north'|'south'|'east'|'west'|'any'>('any')
+const showDailyPlan    = ref(false)
+const isLoading        = ref(false)
+const selectedMeal     = ref<MealPlan|null>(null)
 
-const mealRecommendations = computed(() => {
-  return getMealRecommendations({
+const mealRecommendations = computed(() =>
+  getMealRecommendations({
     currentGlucose: currentGlucose.value,
-    targetGlucose: targetGlucose.value,
-    mealType: selectedMealType.value,
-    region: selectedRegion.value
+    targetGlucose:  targetGlucose.value,
+    mealType:       selectedMealType.value,
+    region:         selectedRegion.value
   })
-})
+)
 
-const dailyPlan = computed(() => generateDailyPlan(currentGlucose.value, targetGlucose.value))
+const dailyPlan = computed(() =>
+  generateDailyPlan(currentGlucose.value, targetGlucose.value)
+)
 
 function refreshRecommendations() {
   isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-  }, 600)
+  setTimeout(() => isLoading.value = false, 500)
 }
 
-function getGlycemicLoadColor(load: string): string {
+function glBadgeClass(load: string) {
   switch (load) {
-    case 'low': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30'
-    case 'medium': return 'text-amber-400 bg-amber-400/10 border-amber-400/30'
-    case 'high': return 'text-red-400 bg-red-400/10 border-red-400/30'
-    default: return 'text-slate-400 bg-slate-400/10'
+    case 'low':    return 'badge-success'
+    case 'medium': return 'badge-warning'
+    case 'high':   return 'badge-danger'
+    default:       return 'badge-info'
   }
 }
 
-function getGILabel(load: string): string {
-  switch (load) {
-    case 'low': return 'Low GI'
-    case 'medium': return 'Med GI'
-    case 'high': return 'High GI'
-    default: return load
-  }
+function getGILabel(load: string) {
+  return { low: 'Low GI', medium: 'Med GI', high: 'High GI' }[load] ?? load
+}
+
+const mealEmoji: Record<string, string> = {
+  breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎'
 }
 </script>
 
 <template>
-  <div class="space-y-4 md:space-y-6">
-    <!-- Header & Controls -->
-    <div class="bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-700">
-      <div class="flex items-center gap-3 mb-4 md:mb-6">
-        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0">
-          <ChefHat class="text-white" :size="20" />
+  <div class="space-y-6">
+
+    <!-- ── Header / Controls ── -->
+    <div class="card-premium">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-11 h-11 rounded-2xl flex items-center justify-center" style="background:#fff7ed;color:#c2410c;">
+          <ChefHat class="w-5 h-5" />
         </div>
-        <div class="min-w-0">
-          <h2 class="text-xl md:text-2xl font-bold text-white truncate">AI Meal Planner</h2>
-          <p class="text-slate-400 text-xs md:text-sm truncate">Personalized recommendations based on your glucose</p>
+        <div>
+          <h2 class="text-xl font-bold text-stone-800 tracking-tight">AI Meal Planner</h2>
+          <p class="text-stone-400 text-sm">Personalized recommendations based on your glucose</p>
         </div>
       </div>
 
-      <!-- Controls -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <!-- Controls grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
         <!-- Current Glucose -->
         <div class="col-span-2 md:col-span-1">
-          <label class="block text-xs md:text-sm font-medium text-slate-300 mb-1.5 md:mb-2">Current Glucose (mg/dL)</label>
-          <div class="flex items-center gap-1.5 md:gap-2">
-            <button 
-              @click="currentGlucose = Math.max(70, currentGlucose - 10); refreshRecommendations()" 
-              class="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 flex-shrink-0 touch-manipulation"
-              aria-label="Decrease glucose"
+          <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
+            Current Glucose (mg/dL)
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              @click="currentGlucose = Math.max(70, currentGlucose - 10); refreshRecommendations()"
+              class="w-9 h-9 flex items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all"
             >
-              <Minus :size="16" />
+              <Minus class="w-4 h-4" />
             </button>
-            <input 
-              v-model.number="currentGlucose" 
-              type="number" 
+            <input
+              v-model.number="currentGlucose"
+              type="number"
               @change="refreshRecommendations()"
-              class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded-lg px-2 md:px-4 py-2 text-center text-white font-semibold text-sm md:text-base"
-              aria-label="Current glucose value"
+              class="input-field text-center font-bold text-stone-800"
+              style="padding:0.5rem"
             />
-            <button 
-              @click="currentGlucose = Math.min(400, currentGlucose + 10); refreshRecommendations()" 
-              class="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 flex-shrink-0 touch-manipulation"
-              aria-label="Increase glucose"
+            <button
+              @click="currentGlucose = Math.min(400, currentGlucose + 10); refreshRecommendations()"
+              class="w-9 h-9 flex items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all"
             >
-              <Plus :size="16" />
+              <Plus class="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <!-- Target Glucose -->
+        <!-- Target -->
         <div>
-          <label class="block text-xs md:text-sm font-medium text-slate-300 mb-1.5 md:mb-2">Target (mg/dL)</label>
-          <input 
-            v-model.number="targetGlucose" 
-            type="number" 
+          <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Target (mg/dL)</label>
+          <input
+            v-model.number="targetGlucose"
+            type="number"
             @change="refreshRecommendations()"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 md:px-4 py-2 text-center text-white font-semibold text-sm md:text-base"
-            aria-label="Target glucose value"
+            class="input-field text-center font-bold text-stone-800"
           />
         </div>
 
         <!-- Meal Type -->
         <div>
-          <label class="block text-xs md:text-sm font-medium text-slate-300 mb-1.5 md:mb-2">Meal Type</label>
-          <select 
-            v-model="selectedMealType" 
-            @change="refreshRecommendations()"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 md:px-4 py-2 text-white text-sm md:text-base capitalize"
-            aria-label="Select meal type"
-          >
+          <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Meal Type</label>
+          <select v-model="selectedMealType" @change="refreshRecommendations()" class="input-field">
             <option value="breakfast">🌅 Breakfast</option>
             <option value="lunch">☀️ Lunch</option>
             <option value="dinner">🌙 Dinner</option>
@@ -135,13 +131,8 @@ function getGILabel(load: string): string {
 
         <!-- Region -->
         <div>
-          <label class="block text-xs md:text-sm font-medium text-slate-300 mb-1.5 md:mb-2">Region</label>
-          <select 
-            v-model="selectedRegion" 
-            @change="refreshRecommendations()"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-2 md:px-4 py-2 text-white text-sm md:text-base capitalize"
-            aria-label="Select cuisine region"
-          >
+          <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">Region</label>
+          <select v-model="selectedRegion" @change="refreshRecommendations()" class="input-field">
             <option value="any">🌍 Any Region</option>
             <option value="north">🍛 North Indian</option>
             <option value="south">🥥 South Indian</option>
@@ -151,194 +142,204 @@ function getGILabel(load: string): string {
         </div>
       </div>
 
-      <!-- Toggle Daily Plan -->
-      <div class="mt-4 md:mt-6">
-        <button 
+      <!-- Daily plan toggle -->
+      <div class="mt-5 pt-4 border-t border-stone-100">
+        <button
           @click="showDailyPlan = !showDailyPlan"
-          class="w-full md:w-auto px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg md:rounded-xl font-semibold text-white text-sm md:text-base hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg shadow-cyan-500/25"
-          aria-label="Toggle daily meal plan"
+          class="btn-primary"
         >
-          {{ showDailyPlan ? '🔽 Hide' : '🔼 Show' }} Full Day Plan
+          <Calendar class="w-4 h-4" />
+          {{ showDailyPlan ? 'Hide' : 'View' }} Full Day Plan
         </button>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-12">
-      <div class="text-center">
-        <Loader2 class="w-10 h-10 md:w-12 md:h-12 text-orange-400 animate-spin mx-auto mb-4" />
-        <p class="text-slate-300 text-sm md:text-base">AI is analyzing your glucose...</p>
-        <p class="text-slate-500 text-xs md:text-sm mt-2">Finding optimal meals</p>
-      </div>
+    <!-- Loading -->
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-14">
+      <Loader2 class="w-10 h-10 text-teal-500 animate-spin mb-3" />
+      <p class="text-stone-600 font-medium">AI is analyzing your glucose…</p>
+      <p class="text-stone-400 text-sm mt-1">Finding optimal meals</p>
     </div>
 
-    <div v-else class="space-y-4 md:space-y-6">
-      <!-- Daily Plan Summary -->
-      <div v-if="showDailyPlan" class="bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-700 animate-in fade-in">
-        <h3 class="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Complete Daily Plan</h3>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <!-- Breakfast -->
-          <div class="bg-slate-700/50 rounded-lg md:rounded-xl p-3 md:p-4">
+    <div v-else class="space-y-6">
+
+      <!-- ── Daily Plan ── -->
+      <div v-if="showDailyPlan" class="card-premium animate-fade-in">
+        <h3 class="section-title mb-4 flex items-center gap-2">
+          <Calendar class="w-4.5 h-4.5 text-teal-500" style="width:18px;height:18px" />
+          Complete Daily Plan
+        </h3>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div
+            v-for="(meal, key) in { breakfast: dailyPlan.breakfast, lunch: dailyPlan.lunch, dinner: dailyPlan.dinner }"
+            :key="key"
+            class="daily-meal-card"
+          >
             <div class="flex items-center gap-2 mb-2">
-              <span class="text-lg md:text-xl">🌅</span>
-              <span class="font-semibold text-white text-sm md:text-base">Breakfast</span>
+              <span class="text-xl">{{ mealEmoji[key] }}</span>
+              <span class="font-semibold text-stone-700 text-sm capitalize">{{ key }}</span>
             </div>
-            <p class="text-xs md:text-sm text-slate-300 line-clamp-2">{{ dailyPlan.breakfast.name }}</p>
-            <div class="mt-2 flex items-center gap-2">
-              <span :class="`text-xs px-2 py-0.5 rounded-full border ${getGlycemicLoadColor(dailyPlan.breakfast.glycemicLoad)}`">
-                {{ getGILabel(dailyPlan.breakfast.glycemicLoad) }}
-              </span>
+            <p class="text-xs text-stone-600 leading-snug line-clamp-2">{{ meal.name }}</p>
+            <div class="mt-2">
+              <span :class="['badge', glBadgeClass(meal.glycemicLoad)]">{{ getGILabel(meal.glycemicLoad) }}</span>
             </div>
           </div>
 
-          <!-- Lunch -->
-          <div class="bg-slate-700/50 rounded-lg md:rounded-xl p-3 md:p-4">
+          <div class="daily-meal-card">
             <div class="flex items-center gap-2 mb-2">
-              <span class="text-lg md:text-xl">☀️</span>
-              <span class="font-semibold text-white text-sm md:text-base">Lunch</span>
+              <span class="text-xl">🍎</span>
+              <span class="font-semibold text-stone-700 text-sm">Snacks</span>
             </div>
-            <p class="text-xs md:text-sm text-slate-300 line-clamp-2">{{ dailyPlan.lunch.name }}</p>
-            <div class="mt-2 flex items-center gap-2">
-              <span :class="`text-xs px-2 py-0.5 rounded-full border ${getGlycemicLoadColor(dailyPlan.lunch.glycemicLoad)}`">
-                {{ getGILabel(dailyPlan.lunch.glycemicLoad) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Dinner -->
-          <div class="bg-slate-700/50 rounded-lg md:rounded-xl p-3 md:p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-lg md:text-xl">🌙</span>
-              <span class="font-semibold text-white text-sm md:text-base">Dinner</span>
-            </div>
-            <p class="text-xs md:text-sm text-slate-300 line-clamp-2">{{ dailyPlan.dinner.name }}</p>
-            <div class="mt-2 flex items-center gap-2">
-              <span :class="`text-xs px-2 py-0.5 rounded-full border ${getGlycemicLoadColor(dailyPlan.dinner.glycemicLoad)}`">
-                {{ getGILabel(dailyPlan.dinner.glycemicLoad) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Snacks -->
-          <div class="bg-slate-700/50 rounded-lg md:rounded-xl p-3 md:p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-lg md:text-xl">🍎</span>
-              <span class="font-semibold text-white text-sm md:text-base">Snacks</span>
-            </div>
-            <p class="text-xs md:text-sm text-slate-300">{{ dailyPlan.snacks.length }} options</p>
-            <div class="mt-2 flex items-center gap-2">
-              <span class="text-xs text-slate-400">{{ dailyPlan.totalDailyCarbs }}g carbs/day</span>
-            </div>
+            <p class="text-xs text-stone-600">{{ dailyPlan.snacks.length }} options available</p>
+            <div class="mt-2 text-xs text-stone-400">{{ dailyPlan.totalDailyCarbs }}g carbs/day</div>
           </div>
         </div>
-        
-        <div class="mt-3 md:mt-4 p-3 md:p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg md:rounded-xl">
-          <p class="text-blue-300 text-xs md:text-sm">{{ dailyPlan.summary }}</p>
+
+        <div class="mt-4 p-4 rounded-xl" style="background:#eff6ff;border:1px solid rgba(59,130,246,0.15);">
+          <div class="flex items-start gap-2">
+            <Info class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+            <p class="text-blue-700 text-sm">{{ dailyPlan.summary }}</p>
+          </div>
         </div>
       </div>
 
-      <!-- Meal Recommendations -->
+      <!-- ── Meal Recommendations ── -->
       <div>
-        <h3 class="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Recommended {{ selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1) }} Options</h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          <div 
-            v-for="meal in mealRecommendations.slice(0, 6)" 
+        <h3 class="section-title mb-4">
+          {{ mealEmoji[selectedMealType] }}
+          Recommended {{ selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1) }} Options
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            v-for="meal in mealRecommendations.slice(0, 6)"
             :key="meal.id"
             @click="selectedMeal = meal"
             :class="[
-              'bg-slate-800 rounded-xl p-4 md:p-5 border cursor-pointer transition-all',
-              selectedMeal?.id === meal.id 
-                ? 'border-cyan-500 ring-2 ring-cyan-500/20' 
-                : 'border-slate-700 hover:border-slate-600'
+              'meal-card',
+              selectedMeal?.id === meal.id ? 'meal-card--selected' : ''
             ]"
           >
-            <div class="flex items-start justify-between mb-2 md:mb-3">
-              <h4 class="font-semibold text-white text-sm md:text-base line-clamp-2 pr-2">{{ meal.name }}</h4>
-              <span :class="`text-xs px-2 py-0.5 rounded-full font-medium border flex-shrink-0 ${getGlycemicLoadColor(meal.glycemicLoad)}`">
-                {{ getGILabel(meal.glycemicLoad) }}
-              </span>
+            <div class="flex items-start justify-between gap-2 mb-2.5">
+              <h4 class="font-semibold text-stone-800 text-sm leading-snug">{{ meal.name }}</h4>
+              <span :class="['badge flex-shrink-0', glBadgeClass(meal.glycemicLoad)]">{{ getGILabel(meal.glycemicLoad) }}</span>
             </div>
 
             <div class="space-y-1 mb-3">
-              <div v-for="food in meal.foods.slice(0, 2)" :key="food.id" class="flex items-center gap-2 text-xs md:text-sm text-slate-400">
-                <span class="text-slate-500">•</span>
+              <div
+                v-for="food in meal.foods.slice(0, 2)"
+                :key="food.id"
+                class="flex items-center gap-1.5 text-xs text-stone-500"
+              >
+                <span class="text-stone-300">•</span>
                 <span class="truncate">{{ food.name }}</span>
-                <span class="text-slate-600 flex-shrink-0">({{ food.glycemicIndex }})</span>
+                <span class="text-stone-300 flex-shrink-0">(GI {{ food.glycemicIndex }})</span>
               </div>
-              <div v-if="meal.foods.length > 2" class="text-xs text-slate-500">
-                +{{ meal.foods.length - 2 }} more
-              </div>
-            </div>
-
-            <div class="grid grid-cols-4 gap-2 pt-3 border-t border-slate-700">
-              <div class="text-center">
-                <Flame class="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-400 mx-auto mb-1" />
-                <span class="text-xs text-slate-400">{{ meal.totalCalories }}</span>
-              </div>
-              <div class="text-center">
-                <Wheat class="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-400 mx-auto mb-1" />
-                <span class="text-xs text-slate-400">{{ meal.totalCarbs }}g</span>
-              </div>
-              <div class="text-center">
-                <Leaf class="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-400 mx-auto mb-1" />
-                <span class="text-xs text-slate-400">{{ meal.totalProtein }}g</span>
-              </div>
-              <div class="text-center">
-                <Droplets class="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-400 mx-auto mb-1" />
-                <span class="text-xs text-slate-400">{{ meal.totalFat }}g</span>
+              <div v-if="meal.foods.length > 2" class="text-xs text-stone-400">
+                +{{ meal.foods.length - 2 }} more items
               </div>
             </div>
 
-            <div class="mt-2 md:mt-3 text-xs text-cyan-400">
-              Glucose: {{ meal.predictedGlucoseChange > 0 ? '+' : '' }}{{ meal.predictedGlucoseChange }} mg/dL
+            <!-- Nutrition strip -->
+            <div class="grid grid-cols-4 gap-1 pt-3 border-t border-stone-100">
+              <div class="text-center">
+                <Flame class="w-3.5 h-3.5 text-orange-400 mx-auto mb-0.5" />
+                <div class="text-xs text-stone-500 font-medium">{{ meal.totalCalories }}</div>
+                <div class="text-xs text-stone-400" style="font-size:0.6rem;">kcal</div>
+              </div>
+              <div class="text-center">
+                <Wheat class="w-3.5 h-3.5 text-amber-500 mx-auto mb-0.5" />
+                <div class="text-xs text-stone-500 font-medium">{{ meal.totalCarbs }}g</div>
+                <div class="text-xs text-stone-400" style="font-size:0.6rem;">carbs</div>
+              </div>
+              <div class="text-center">
+                <Leaf class="w-3.5 h-3.5 text-emerald-500 mx-auto mb-0.5" />
+                <div class="text-xs text-stone-500 font-medium">{{ meal.totalProtein }}g</div>
+                <div class="text-xs text-stone-400" style="font-size:0.6rem;">protein</div>
+              </div>
+              <div class="text-center">
+                <Droplets class="w-3.5 h-3.5 text-blue-400 mx-auto mb-0.5" />
+                <div class="text-xs text-stone-500 font-medium">{{ meal.totalFat }}g</div>
+                <div class="text-xs text-stone-400" style="font-size:0.6rem;">fat</div>
+              </div>
+            </div>
+
+            <!-- Glucose prediction -->
+            <div class="mt-2.5 flex items-center gap-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-teal-400" />
+              <span class="text-xs font-semibold text-teal-600">
+                Glucose: {{ meal.predictedGlucoseChange > 0 ? '+' : '' }}{{ meal.predictedGlucoseChange }} mg/dL
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Selected Meal Detail Modal -->
-      <div v-if="selectedMeal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg md:text-xl font-bold text-white pr-4">{{ selectedMeal.name }}</h3>
-            <button @click="selectedMeal = null" class="p-2 text-slate-400 hover:text-white flex-shrink-0">
-              <X :size="24" />
+    </div>
+
+    <!-- ── Meal Detail Modal ── -->
+    <Transition name="modal-fade">
+      <div v-if="selectedMeal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,0.4);">
+        <div class="modal-panel">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-bold text-stone-800 pr-4 leading-snug">{{ selectedMeal.name }}</h3>
+            <button
+              @click="selectedMeal = null"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors flex-shrink-0"
+            >
+              <X class="w-5 h-5" />
             </button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Foods -->
             <div>
-              <h4 class="font-semibold text-slate-300 mb-3">Food Items</h4>
+              <h4 class="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Food Items</h4>
               <div class="space-y-2">
-                <div v-for="food in selectedMeal.foods" :key="food.id" class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                <div
+                  v-for="food in selectedMeal.foods"
+                  :key="food.id"
+                  class="flex items-center justify-between p-3 rounded-xl"
+                  style="background:#f5f5f4;"
+                >
                   <div class="min-w-0">
-                    <span class="text-white text-sm">{{ food.name }}</span>
-                    <span class="text-xs text-slate-500 ml-2">{{ food.hindiName }}</span>
+                    <span class="text-stone-800 text-sm font-medium">{{ food.name }}</span>
+                    <span class="text-xs text-stone-400 ml-1.5">{{ food.hindiName }}</span>
                   </div>
-                  <div class="text-right text-xs md:text-sm flex-shrink-0">
-                    <span class="text-slate-400">{{ food.servingSize }}</span>
-                  </div>
+                  <span class="text-xs text-stone-500 flex-shrink-0 ml-2">{{ food.servingSize }}</span>
                 </div>
               </div>
             </div>
 
-            <div>
-              <h4 class="font-semibold text-slate-300 mb-3">AI Recommendations</h4>
-              <div class="space-y-2">
-                <div v-for="(rec, i) in selectedMeal.recommendations" :key="i" class="flex items-start gap-2 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-                  <CheckCircle2 class="w-4 h-4 md:w-5 md:h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                  <span class="text-emerald-300 text-xs md:text-sm">{{ rec }}</span>
+            <!-- Recommendations & Warnings -->
+            <div class="space-y-4">
+              <div>
+                <h4 class="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">AI Recommendations</h4>
+                <div class="space-y-2">
+                  <div
+                    v-for="(rec, i) in selectedMeal.recommendations"
+                    :key="i"
+                    class="flex items-start gap-2 p-3 rounded-xl"
+                    style="background:#f0fdf4;border:1px solid rgba(34,197,94,0.2);"
+                  >
+                    <CheckCircle2 class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span class="text-emerald-800 text-xs leading-relaxed">{{ rec }}</span>
+                  </div>
                 </div>
               </div>
 
-              <div v-if="selectedMeal.warnings.length > 0" class="mt-4">
-                <h4 class="font-semibold text-slate-300 mb-3">Warnings</h4>
+              <div v-if="selectedMeal.warnings.length > 0">
+                <h4 class="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">Cautions</h4>
                 <div class="space-y-2">
-                  <div v-for="(warning, i) in selectedMeal.warnings" :key="i" class="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <AlertTriangle class="w-4 h-4 md:w-5 md:h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                    <span class="text-red-300 text-xs md:text-sm">{{ warning }}</span>
+                  <div
+                    v-for="(warning, i) in selectedMeal.warnings"
+                    :key="i"
+                    class="flex items-start gap-2 p-3 rounded-xl"
+                    style="background:#fef2f2;border:1px solid rgba(239,68,68,0.15);"
+                  >
+                    <AlertTriangle class="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                    <span class="text-red-700 text-xs leading-relaxed">{{ warning }}</span>
                   </div>
                 </div>
               </div>
@@ -346,22 +347,64 @@ function getGILabel(load: string): string {
           </div>
         </div>
       </div>
-    </div>
+    </Transition>
+
   </div>
 </template>
 
 <style scoped>
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fadeIn 0.3s ease both; }
+
+/* Meal cards */
+.meal-card {
+  background: white;
+  border: 1.5px solid #e7e5e4;
+  border-radius: 16px;
+  padding: 1.125rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.animate-in {
-  animation: fade-in 0.3s ease-out;
+.meal-card:hover {
+  border-color: #14b8a6;
+  box-shadow: 0 4px 16px rgba(20,184,166,0.12);
+  transform: translateY(-1px);
 }
 
-.touch-manipulation {
-  touch-action: manipulation;
+.meal-card--selected {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20,184,166,0.12), 0 4px 16px rgba(20,184,166,0.12);
+}
+
+/* Daily plan mini-cards */
+.daily-meal-card {
+  background: #f5f5f4;
+  border: 1px solid #e7e5e4;
+  border-radius: 14px;
+  padding: 0.875rem;
+}
+
+/* Modal */
+.modal-panel {
+  background: white;
+  border-radius: 24px;
+  padding: 1.75rem;
+  max-width: 680px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+}
+
+.modal-fade-enter-active, .modal-fade-leave-active {
+  transition: all 0.25s ease;
+}
+.modal-fade-enter-from, .modal-fade-leave-to {
+  opacity: 0;
+}
+.modal-fade-enter-from .modal-panel {
+  transform: scale(0.96) translateY(8px);
 }
 
 .line-clamp-2 {
